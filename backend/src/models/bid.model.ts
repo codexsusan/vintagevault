@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
 import { BidType } from "../schemas/bid";
 
-const bidModel: Schema<BidType> = new Schema({
+const bidModel: Schema = new Schema({
   userId: {
     type: String,
     required: true,

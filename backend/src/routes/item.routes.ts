@@ -1,15 +1,22 @@
 import express from "express";
-import Item from "../models/item.model";
-import { ItemSchema } from "../schemas/items";
+import {
+    createItem,
+    deleteItem,
+    getAllItems,
+    getItemById,
+    searchItems,
+    updateItem,
+} from "../controller/item.controller";
 import { isAdmin, verifyToken } from "../middleware/auth.middleware";
-import { z } from "zod";
-import { createItem, deleteItem, getAllItems, getItemById, updateItem } from "../controller/item.controller";
 
 const router = express.Router();
 router.use(verifyToken);
 
 // Get all items with pagination
 router.get("/", getAllItems);
+
+// Search all items with pagination
+router.get("/search", searchItems);
 
 // Get a single item
 router.get("/:id", getItemById);
@@ -21,6 +28,6 @@ router.post("/", isAdmin, createItem);
 router.put("/:id", isAdmin, updateItem);
 
 // Delete an item (admin only)
-router.delete('/:id', isAdmin,deleteItem);
+router.delete("/:id", isAdmin, deleteItem);
 
 export default router;

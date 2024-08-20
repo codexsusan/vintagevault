@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
 import { AuctionType } from "../schemas/auction";
 
-const auctionModel: Schema<AuctionType> = new Schema({
+const auctionModel: Schema = new Schema({
   itemId: {
     type: String,
     required: true,

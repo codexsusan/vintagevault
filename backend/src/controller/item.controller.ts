@@ -29,6 +29,9 @@ export const getItemById = async (req: IRequest, res: Response) => {
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
+
+    // If there are no bids, return an empty array instead of null
+    item.bids = item.bids || [];
     res.json(item);
   } catch (error) {
     res.status(500).json({
@@ -50,7 +53,6 @@ export const createItem = async (req: IRequest, res: Response) => {
       bids: [],
     };
 
-    console.log(itemData);
     const newItem = new Item(itemData);
     await newItem.save();
     res.status(201).json(newItem);

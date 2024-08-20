@@ -1,7 +1,14 @@
 import { model, Schema } from "mongoose";
-import { AutoBidConfigType } from "../schemas/auto-bid-config";
 
-const autoBidModel: Schema<AutoBidConfigType> = new Schema({
+export interface IAutoBidConfig extends Document {
+  _id: string;
+  userId: string;
+  maxBidAmount: number;
+  bidAlertPercentage: number;
+  activeBids: string[];
+}
+
+const autoBidModel: Schema = new Schema({
   userId: {
     type: String,
     required: true,
@@ -22,6 +29,6 @@ const autoBidModel: Schema<AutoBidConfigType> = new Schema({
   ],
 });
 
-const AutoBid = model("AutoBid", autoBidModel);
+const AutoBidConfig = model<IAutoBidConfig>("AutoBidConfig", autoBidModel);
 
-export default AutoBid;
+export default AutoBidConfig;

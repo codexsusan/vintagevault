@@ -7,7 +7,15 @@ import { PORT } from "./constants";
 import { verifyToken } from "./middleware/auth.middleware";
 import authRoutes from "./routes/auth.routes";
 import itemRoutes from "./routes/item.routes";
+import bidRoutes from "./routes/bid.routes";
+import autoBidRoutes from "./routes/auto-bid.routes";
+import imagesRoutes from "./routes/images.routes";
 import { IRequest } from "./types";
+
+import "./models/item.model";
+import "./models/bid.model";
+import "./models/auction.model";
+import "./models/auto-bid.model";
 
 const app = express();
 const port = PORT || 3000;
@@ -24,8 +32,11 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/items", itemRoutes);
+app.use("/api/bids", bidRoutes);
+app.use("/api/auto-bid", autoBidRoutes);
+app.use("/api/images", imagesRoutes);
 
-app.get("/api/users", verifyToken, (req: IRequest, res) => {
+app.get("/api/test", verifyToken, (req: IRequest, res) => {
   console.log(req.user);
   res.json({ message: "Hello World!" });
 });
@@ -37,6 +48,7 @@ app.use("*", (_req: Request, res: Response): void => {
 
 app.use(
   (_err: Error, _req: Request, res: Response, _next: NextFunction): void => {
+    console.error(_err);
     res.status(500).send({ message: "Something went wrong!" });
   }
 );

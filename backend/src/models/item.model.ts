@@ -1,5 +1,18 @@
 import { model, Schema } from "mongoose";
 
+export interface IItem extends Document {
+  _id: string;
+  name: string;
+  adminId: string;
+  description: string;
+  startingPrice: number;
+  currentPrice: number;
+  isPublished: boolean;
+  auctionEndTime: Date;
+  image: string;
+  bids: string[];
+}
+
 const itemModel: Schema = new Schema({
   name: {
     type: String,
@@ -41,6 +54,6 @@ const itemModel: Schema = new Schema({
   ],
 });
 
-const Item = model("Item", itemModel);
+const Item = model<IItem>("Item", itemModel);
 
 export default Item;

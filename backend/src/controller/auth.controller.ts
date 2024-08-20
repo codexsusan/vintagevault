@@ -10,11 +10,7 @@ const hardcodedUsers: User[] = [
   { id: "6789054321", username: "user2", password: "user2", role: "user" },
 ];
 
-export const login = (
-  req: IRequest,
-  res: Response,
-  next: NextFunction
-) => {
+export const login = (req: IRequest, res: Response, next: NextFunction) => {
   const { username, password } = req.body;
   const user = hardcodedUsers.find(
     (user) => user.username === username && user.password === password
@@ -26,7 +22,7 @@ export const login = (
       JWT_SECRET,
       { expiresIn: "1h" }
     );
-    res.json({ token });
+    res.json({ token, role: user.role });
   } else {
     res.status(401).json({ message: "Invalid credentials" });
   }
