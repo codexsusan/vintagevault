@@ -3,16 +3,53 @@ import Item from "../models/item.model";
 import { ItemSchema } from "../schemas/items";
 import { IRequest } from "../types";
 import { Response, Request } from "express";
+import { getPresignedUrl } from "../middleware/images.middleware";
+import { SortOrder } from "mongoose";
 
-// Get all items with pagination
 export const getAllItems = async (req: IRequest, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const skip = (page - 1) * limit;
   try {
-    const items = await Item.find().skip(skip).limit(limit);
-    const total = await Item.countDocuments();
-    res.json({ items, total, page, totalPages: Math.ceil(total / limit) });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search as string;
+    const sortBy = req.query.sortBy as string;
+    const sortOrder = req.query.sortOrder as SortOrder;
+
+    // Build the query
+    let query = Item.find();
+
+    // Apply search filter
+    if (search) {
+      query = query.or([
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ]);
+    }
+
+    // Apply sorting
+    if (sortBy === "price") {
+      query = query.sort({ currentPrice: sortOrder });
+    }
+
+    // Execute the query
+    const items = await query.skip(skip).limit(limit).select("-__v");
+    const total = await Item.countDocuments(query.getFilter());
+
+    const itemsWithPresignedUrl = await Promise.all(
+      items.map(async (item) => {
+        const presignedUrl = await getPresignedUrl(item.image);
+        return { ...item.toObject(), image: presignedUrl };
+      })
+    );
+
+    res.json({
+      success: true,
+      message: "Items fetched successfully",
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      items: itemsWithPresignedUrl,
+    });
   } catch (error) {
     res.status(500).json({
       message: "Error fetching items",
@@ -25,14 +62,20 @@ export const getAllItems = async (req: IRequest, res: Response) => {
 export const getItemById = async (req: IRequest, res: Response) => {
   const itemId = req.params.id;
   try {
-    const item = await Item.findById(itemId).populate("bids");
+    const item = await Item.findById(itemId).populate("bids").select("-__v");
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
+    const presignedUrl = await getPresignedUrl(item.image);
+    const itemWithPresignedUrl = { ...item.toObject(), image: presignedUrl };
 
-    // If there are no bids, return an empty array instead of null
+    // If there are no bids, reurning an empty array instead of null
     item.bids = item.bids || [];
-    res.json(item);
+    res.json({
+      success: true,
+      message: "Item fetched successfully",
+      item: itemWithPresignedUrl,
+    });
   } catch (error) {
     res.status(500).json({
       message: "Error fetching item",
@@ -55,7 +98,10 @@ export const createItem = async (req: IRequest, res: Response) => {
 
     const newItem = new Item(itemData);
     await newItem.save();
-    res.status(201).json(newItem);
+    res.status(201).json({
+      message: "Item created successfully",
+      success: true,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res
@@ -81,11 +127,22 @@ export const updateItem = async (req: IRequest, res: Response) => {
     const updatedItem = await Item.findByIdAndUpdate(req.params.id, itemData, {
       new: true,
       runValidators: true,
-    });
+    }).select("-__v");
     if (!updatedItem) {
       return res.status(404).json({ message: "Item not found" });
     }
-    res.json(updatedItem);
+
+    const presignedUrl = await getPresignedUrl(updatedItem.image);
+    const updatedItemWithPresignedUrl = {
+      ...updatedItem.toObject(),
+      image: presignedUrl,
+    };
+
+    res.json({
+      success: true,
+      message: "Item updated successfully",
+      item: updatedItemWithPresignedUrl,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res
@@ -141,11 +198,9 @@ export const searchItems = async (req: IRequest, res: Response) => {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error searching items",
-        error: (error as Error).message,
-      });
+    res.status(500).json({
+      message: "Error searching items",
+      error: (error as Error).message,
+    });
   }
 };

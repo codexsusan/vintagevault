@@ -7,6 +7,8 @@ import InitialRoute from "./InitialRoute";
 import AdminLayout from "@/layout/AdminLayout";
 import Dashboard from "@/pages/admin/Dashboard";
 import AddItem from "@/pages/admin/AddItem";
+import UpdateItem from "@/pages/admin/UpdateItem";
+import ItemDetails from "@/pages/user/ItemDetailsPage";
 
 const router = createBrowserRouter([
     {
@@ -20,11 +22,16 @@ const router = createBrowserRouter([
     {
         path: "/",
         element: <UserLayout />,
-        errorElement: <NotFound />,
+        // errorElement: <NotFound />,
         children: [
             {
                 path: "/home",
                 element: <Home />
+            },
+            {
+                path: "/item/:id",
+                element: <ItemDetails />
+                // element: <Home />
             },
         ]
     },
@@ -38,9 +45,13 @@ const router = createBrowserRouter([
                 element: <Dashboard />
             },
             {
-                path: "new",
+                path: "item/new",
                 element: <AddItem />
-            }
+            },
+            {
+                path: "item/update/:id",
+                element: <UpdateItem />
+            },
         ]
     },
     { path: "*", element: <NotFound /> },

@@ -5,28 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useCreateItem } from "@/hooks/itemHooks";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useUploadImage } from "@/hooks/useUploadImage";
+import { UploadImageResponse, useUploadImage } from "@/hooks/useUploadImage";
 import { cn } from "@/lib/utils";
+import { CreateItemResponse } from "@/services/itemService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const uploadResponseSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-  data: z.object({
-    url: z.string(),
-    key: z.string(),
-  }),
-});
-
-
-export type UploadResponse = z.infer<typeof uploadResponseSchema>;
 
 const formSchema = z.object({
   name: z.string().min(3, { message: "Name must be atleast 3 characters." }),
@@ -34,17 +25,25 @@ const formSchema = z.object({
   startingPrice: z.number().min(1, { message: "Starting price must be atleast 1." }),
   isPublished: z.boolean(),
   image: z.string(),
-  imageKey: z.string(),
-  auctionEndTime: z.date().refine((date) => new Date(date) >= new Date(),
-    "Auction end date must be in the future"
-  )
+  auctionEndTime: z.object({
+    date: z.date().refine((date) => new Date(date) >= new Date(new Date().setHours(0, 0, 0, 0)),
+      "Auction end date must be in the future"),
+    time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format")
+  })
 });
 
+export type Item = z.infer<typeof formSchema>;
+
 function AddItem() {
+  const [imageKey, setImageKey] = useState<string>("");
 
   useDocumentTitle("Add Item");
 
-  const {mutate: uploadImage} = useUploadImage();
+  const navigate = useNavigate();
+
+  const { mutate: uploadImage, isPending: isUploadingImage } = useUploadImage();
+
+  const { mutate: createItem, isPending } = useCreateItem();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,21 +53,32 @@ function AddItem() {
       startingPrice: 0,
       isPublished: false,
       image: "",
-      imageKey: "",
-      auctionEndTime: new Date(),
+      auctionEndTime: {
+        date: new Date(),
+        time: format(new Date(), "HH:mm")
+      },
     },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
-    const itemData = {
-      name: values.name,
-      description: values.description,
-      startingPrice: values.startingPrice,
-      isPublished: values.isPublished,
-      image: values.imageKey,
-      auctionEndTime: values.auctionEndTime,
-    }
+    const updatedValues = {
+      ...values,
+      image: imageKey,
+    };
+
+    createItem(updatedValues, {
+      onSuccess: (response: CreateItemResponse) => {
+        if (response.success) {
+          toast.success(response.message);
+          navigate("/admin/dashboard");
+        } else {
+          toast.error(response.message);
+        }
+      },
+      onError: (error: Error) => {
+        toast.error(error.message);
+      },
+    });
   };
 
   const handleImageUpload = async (file: File) => {
@@ -78,9 +88,9 @@ function AddItem() {
       const formData = new FormData();
       formData.append("images", file);
       uploadImage(formData, {
-        onSuccess: (response: UploadResponse) => {
+        onSuccess: (response: UploadImageResponse) => {
           const { key } = response.data;
-          form.setValue("imageKey", key);
+          setImageKey(key);
           console.log("Image uploaded successfully:", key);
         },
         onError: (error: Error) => {
@@ -160,53 +170,70 @@ function AddItem() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="auctionEndTime"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Auction End Time</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-[240px] pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          className="w-full pt-10"
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date()
-                          }
-                          initialFocus
+              <div className="flex justify-start space-x-6 items-end">
+                <FormField
+                  control={form.control}
+                  name="auctionEndTime.date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Auction End Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date(new Date().setHours(0, 0, 0, 0))
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="auctionEndTime.time"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Auction End Time</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="time"
+                          {...field}
                         />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field }) => (
-                  <div className="flex space-x-4 items-end">
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex gap-x-4 items-end">
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={({ field }) => (
                     <FormItem className="w-full">
                       <FormLabel>Image</FormLabel>
                       <FormControl>
@@ -220,13 +247,24 @@ function AddItem() {
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  </div>
-                )}
-              />
-
-
-              <Button className="w-full" type="submit">
-                <span>Create Item</span>
+                  )}
+                />
+                {
+                  isUploadingImage && (
+                    <Button disabled size={"icon"}>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </Button>
+                  )
+                }
+              </div>
+              <Button
+                disabled={isPending || isUploadingImage}
+                className="w-full"
+                type="submit"
+              >
+                {
+                  isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>Create Item</span>
+                }
               </Button>
             </form>
           </Form>
