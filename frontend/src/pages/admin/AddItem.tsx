@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { CreateItemResponse } from "@/services/itemService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";

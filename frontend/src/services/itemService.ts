@@ -1,6 +1,7 @@
 import { Item } from "@/pages/admin/AddItem";
 import { z } from "zod";
 import { apiService } from "./apiServices";
+import { AxiosError } from "axios";
 
 const CreateItemResponseSchema = z.object({
   success: z.boolean(),
@@ -78,8 +79,8 @@ class ItemService {
       const validatedData = CreateItemResponseSchema.parse(response);
       return validatedData;
     } catch (error) {
-      if (error instanceof Error) {
-        throw new Error("Failed to create item");
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data.message);
       }
       throw error;
     }
@@ -93,8 +94,8 @@ class ItemService {
       const validatedData = GetItemsResponseSchema.parse(response);
       return validatedData;
     } catch (error) {
-      if (error instanceof Error) {
-        throw new Error("Failed to get items");
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data.message);
       }
       throw error;
     }
@@ -106,11 +107,10 @@ class ItemService {
         `items/${id}`
       );
       const validatedData = GetItemDetailsResponseSchema.parse(response);
-      console.log(validatedData);
       return validatedData;
     } catch (error) {
-      if (error instanceof Error) {
-        throw new Error("Failed to get item details");
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data.message);
       }
       throw error;
     }

@@ -62,7 +62,7 @@ export const getAllItems = async (req: IRequest, res: Response) => {
 export const getItemById = async (req: IRequest, res: Response) => {
   const itemId = req.params.id;
   try {
-    const item = await Item.findById(itemId).populate("bids").select("-__v");
+    const item = await Item.findById(itemId).select("-__v");
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }

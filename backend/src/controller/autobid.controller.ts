@@ -1,7 +1,9 @@
-import { Request, Response } from "express";
-import AutoBidConfig from "../models/auto-bid.model";
+import { Response } from "express";
+import AutoBidConfig, { IAutoBidConfig } from "../models/auto-bid.model";
 import { AutoBidConfigSchema } from "../schemas/auto-bid-config";
 import { IRequest } from "../types";
+import Item from "../models/item.model";
+import { placeAutoBid } from "./bid.controller";
 
 export const setAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
@@ -71,4 +73,66 @@ export const toggleAutoBid = async (req: IRequest, res: Response) => {
       error: (error as Error).message,
     });
   }
+};
+
+export const processAutoBids = async (
+  itemId: string,
+  currentBid: number,
+  excludeUserId?: string
+) => {
+  const item = await Item.findById(itemId);
+  if (!item) return;
+
+  const autoBidConfigs = await AutoBidConfig.find({
+    activeBids: itemId,
+    userId: { $ne: excludeUserId },
+    status: "active",
+  }).sort({ createdAt: 1 });
+
+  let highestBid = currentBid;
+  let bidPlaced = false;
+
+  do {
+    bidPlaced = false;
+    for (const config of autoBidConfigs) {
+      const newBidAmount = highestBid + 1;
+
+      if (config.canPlaceAutoBid(newBidAmount)) {
+        // Place auto-bid
+        const newBid = await placeAutoBid(config.userId, itemId, newBidAmount);
+
+        // Update reserved amount
+        config.reservedAmount += newBidAmount;
+        await config.save();
+
+        highestBid = newBidAmount;
+        bidPlaced = true;
+
+        // Check if alert threshold is reached
+        if (
+          config.reservedAmount / config.maxBidAmount >=
+          config.bidAlertPercentage / 100
+        ) {
+          // TODO: Send notification to user
+          console.log(
+            `Alert: User ${config.userId} has reached ${config.bidAlertPercentage}% of their maximum bid amount`
+          );
+        }
+
+        // Check if max bid amount is reached
+        if (config.reservedAmount >= config.maxBidAmount) {
+          config.activeBids = config.activeBids.filter(
+            (id) => id.toString() !== itemId
+          );
+          await config.save();
+          // TODO: Send notification that auto-bidding has stopped for this item
+          console.log(
+            `Auto-bidding stopped for user ${config.userId} on item ${itemId}`
+          );
+        }
+
+        break; // Exit the loop after placing a bid
+      }
+    }
+  } while (bidPlaced);
 };
