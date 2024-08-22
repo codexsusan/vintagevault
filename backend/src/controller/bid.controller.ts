@@ -51,13 +51,6 @@ export const placeBid = async (req: IRequest, res: Response) => {
     item.bids.push(newBid._id);
     await item.save();
 
-    // Trigger auto-bidding for other users
-    await processAutoBids(
-      item._id.toString(),
-      validatedBid.amount,
-      req.user?.id
-    );
-
     res.status(201).json({
       success: true,
       message: "Bid placed successfully",
@@ -68,6 +61,13 @@ export const placeBid = async (req: IRequest, res: Response) => {
         timestamp: newBid.timestamp,
       },
     });
+
+    // Trigger auto-bidding for other users
+    await processAutoBids(
+      item._id.toString(),
+      validatedBid.amount,
+      req.user?.id
+    );
   } catch (error) {
     res
       .status(400)

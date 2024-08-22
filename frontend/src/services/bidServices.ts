@@ -5,6 +5,7 @@ import { AxiosError } from "axios";
 export type PlaceBid = {
   itemId: string;
   amount: number;
+  isAutoBid: boolean;
   timestamp: string;
 };
 

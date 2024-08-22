@@ -3,12 +3,12 @@ import { z } from "zod";
 export const AutoBidConfigSchema = z.object({
   maxBidAmount: z
     .number()
-    .positive("Maximum bid amount must be a positive number"),
+    .min(0.01, "Maximum bid amount must be greater than 0"),
   bidAlertPercentage: z
     .number()
-    .min(0, "Alert percentage must be between 0 and 100")
-    .max(100, "Alert percentage must be between 0 and 100"),
-  activeBids: z.array(z.string()),
+    .min(1, "Percentage must be between 1 and 100")
+    .max(100, "Percentage must be between 1 and 100"),
+  itemId: z.string(),
 });
 
 export type AutoBidConfigType = z.infer<typeof AutoBidConfigSchema>;

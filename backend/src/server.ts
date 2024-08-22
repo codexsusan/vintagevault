@@ -14,7 +14,6 @@ import { IRequest } from "./types";
 
 import "./models/item.model";
 import "./models/bid.model";
-import "./models/auction.model";
 import "./models/auto-bid.model";
 
 const app = express();

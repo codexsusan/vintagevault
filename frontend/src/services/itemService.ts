@@ -40,6 +40,7 @@ const GetItemDetailsResponseSchema = z.object({
     currentPrice: z.number(),
     image: z.string(),
     auctionEndTime: z.string(),
+    bids: z.array(z.string()),
   }),
 });
 
@@ -106,6 +107,7 @@ class ItemService {
       const response = await apiService.get<GetItemDetailsResponse>(
         `items/${id}`
       );
+      // console.log(response);
       const validatedData = GetItemDetailsResponseSchema.parse(response);
       return validatedData;
     } catch (error) {

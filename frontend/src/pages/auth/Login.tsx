@@ -41,7 +41,6 @@ function Login() {
                 } else if (data.role === "user") {
                     navigate("/home");
                 }
-                console.log(data);
             },
             onError: (error: Error) => {
                 toast.error(error.message, { duration: 2000 });

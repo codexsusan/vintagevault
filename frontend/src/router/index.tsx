@@ -1,14 +1,14 @@
+import AdminLayout from "@/layout/AdminLayout";
 import UserLayout from "@/layout/UserLayout";
+import AddItem from "@/pages/admin/AddItem";
+import Dashboard from "@/pages/admin/Dashboard";
+import UpdateItem from "@/pages/admin/UpdateItem";
 import Login from "@/pages/auth/Login";
 import NotFound from "@/pages/NotFound";
 import Home from "@/pages/user/Home";
+import NewItemDetails from "@/pages/user/NewItemDetails";
 import { createBrowserRouter } from "react-router-dom";
 import InitialRoute from "./InitialRoute";
-import AdminLayout from "@/layout/AdminLayout";
-import Dashboard from "@/pages/admin/Dashboard";
-import AddItem from "@/pages/admin/AddItem";
-import UpdateItem from "@/pages/admin/UpdateItem";
-import ItemDetails from "@/pages/user/ItemDetailsPage";
 
 const router = createBrowserRouter([
     {
@@ -30,7 +30,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "/item/:id",
-                element: <ItemDetails />
+                element: <NewItemDetails />
                 // element: <Home />
             },
         ]

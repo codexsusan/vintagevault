@@ -15,13 +15,21 @@ export const setAutoBidConfig = async (req: IRequest, res: Response) => {
       config.maxBidAmount = validatedConfig.maxBidAmount;
       config.bidAlertPercentage = validatedConfig.bidAlertPercentage;
     } else {
-      config = new AutoBidConfig({ ...validatedConfig, userId });
+      config = new AutoBidConfig({
+        ...validatedConfig,
+        userId,
+        status: "active",
+      });
     }
 
     await config.save();
-    res.json(config);
+    res.json({
+      success: true,
+      message: "Auto-bid configured successfully.",
+    });
   } catch (error) {
     res.status(400).json({
+      success: false,
       message: "Error setting auto-bid config",
       error: (error as Error).message,
     });
@@ -34,12 +42,25 @@ export const getAutoBidConfig = async (req: IRequest, res: Response) => {
     const config = await AutoBidConfig.findOne({ userId });
     if (!config) {
       return res
-        .status(404)
-        .json({ message: "Auto-bid configuration not found" });
+        .status(400)
+        .json({ message: "Auto-bid not configured for this user" });
     }
-    res.json(config);
+    res.json({
+      success: true,
+      message: "Auto-bid configuration fetched successfully.",
+      data: {
+        _id: config._id,
+        userId: config.userId,
+        maxBidAmount: config.maxBidAmount,
+        bidAlertPercentage: config.bidAlertPercentage,
+        activeBids: config.activeBids,
+        reservedAmount: config.reservedAmount,
+        status: config.status,
+      },
+    });
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: "Error fetching auto-bid config",
       error: (error as Error).message,
     });
@@ -66,9 +87,13 @@ export const toggleAutoBid = async (req: IRequest, res: Response) => {
     }
 
     await config.save();
-    res.json(config);
+    res.json({
+      success: true,
+      message: "Added item for auto-bidding.",
+    });
   } catch (error) {
     res.status(400).json({
+      success: false,
       message: "Error toggling auto-bid",
       error: (error as Error).message,
     });

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { differenceInSeconds, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface CountdownTimerProps {
     endTime: Date;
+    classname?: string;
 }
 
-const CountDown = ({ endTime }: CountdownTimerProps) => {
+const CountDown = ({ endTime, classname }: CountdownTimerProps) => {
     const [timeRemaining, setTimeRemaining] = useState<string>('');
     const [isEnded, setIsEnded] = useState<boolean>(false);
 
@@ -37,7 +39,7 @@ const CountDown = ({ endTime }: CountdownTimerProps) => {
         );
     };
 
-    return <div>{isEnded ? 'Ended' : timeRemaining}</div>;
+    return <div className={cn(classname, '')}>{isEnded ? 'Ended' : timeRemaining}</div>;
 };
 
 export default CountDown;

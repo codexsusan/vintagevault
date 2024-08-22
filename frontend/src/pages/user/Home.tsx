@@ -16,8 +16,10 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 function Home() {
+    useDocumentTitle("Home");
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [search, setSearch] = useState('');

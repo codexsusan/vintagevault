@@ -20,7 +20,7 @@ export const login = (req: IRequest, res: Response, next: NextFunction) => {
     const token = jwt.sign(
       { username: user.username, role: user.role, id: user.id },
       JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1d" }
     );
     res.json({ token, role: user.role });
   } else {
