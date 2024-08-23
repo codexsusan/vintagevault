@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { ADMIN, getUserRole, removeAuthToken, USER } from '@/utils/storage';
+import { ADMIN, getUserRole, removeAuthToken, removeUserRole, USER } from '@/utils/storage';
 
 export default function Navbar() {
     const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -12,6 +12,7 @@ export default function Navbar() {
 
     const handleLogout = () => {
         removeAuthToken();
+        removeUserRole();
         navigate("/auth/login");
     };
 

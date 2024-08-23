@@ -5,52 +5,64 @@ import Bid, { IBid } from "../models/bid.model";
 import { IRequest } from "../types";
 import { processAutoBids } from "./autobid.controller";
 import AutoBidConfig from "../models/auto-bid.model";
+import { startSession } from "mongoose";
 
 export const placeBid = async (req: IRequest, res: Response) => {
+  const session = await startSession();
+  session.startTransaction();
   try {
     const bidData = {
       ...req.body,
       timestamp: new Date(),
     };
     const validatedBid = BidSchema.parse(bidData);
-    const item = await Item.findById(validatedBid.itemId);
+    const item = await Item.findById(validatedBid.itemId).session(session);
 
     if (!item) {
+      await session.abortTransaction();
       return res.status(404).json({ message: "Item not found" });
     }
 
     if (new Date() > item.auctionEndTime) {
-      return res.status(400).json({ message: "Auction has ended" });
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ success: false, message: "Auction has ended" });
     }
 
     const hasHighestBid = await Bid.findOne({
       itemId: item._id,
       userId: req.user?.id,
       amount: item.currentPrice,
-    });
+    }).session(session);
 
     if (hasHighestBid) {
+      await session.abortTransaction();
       return res
         .status(400)
-        .json({ success: false, message: "You already have the highest bid" });
+        .json({ success: false, message: "You already have the highest bid." });
     }
 
     if (validatedBid.amount <= item.currentPrice) {
-      return res
-        .status(400)
-        .json({ message: "Bid must be higher than current price" });
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Bid must be higher than current price",
+      });
     }
 
-    // Check if the user has auto-bidding enabled
-    const autoBidConfig = await AutoBidConfig.findOne({ userId: req.user?.id });
+    // Checking if the user has auto-bidding enabled
+    const autoBidConfig = await AutoBidConfig.findOne({
+      userId: req.user?.id,
+    }).session(session);
     if (autoBidConfig) {
       const currentAllocatedAmount = autoBidConfig.getTotalAllocatedAmount();
       const newTotalAllocated = currentAllocatedAmount + validatedBid.amount;
 
       if (newTotalAllocated > autoBidConfig.maxBidAmount) {
+        await session.abortTransaction();
         return res.status(400).json({
-          message:
-            "Please increase your maximum auto-bid amount or remove some items from auto-bidding.",
+          message: "Please increase your maximum auto-bid amount.",
         });
       }
     }
@@ -60,11 +72,11 @@ export const placeBid = async (req: IRequest, res: Response) => {
       userId: req.user?.id,
       isAutoBid: false,
     });
-    await newBid.save();
+    await newBid.save({ session });
 
     item.currentPrice = validatedBid.amount;
     item.bids.push(newBid._id);
-    await item.save();
+    await item.save({ session });
 
     // If auto-bidding is enabled, update the allocated amount
     if (autoBidConfig) {
@@ -80,9 +92,10 @@ export const placeBid = async (req: IRequest, res: Response) => {
           allocatedAmount: validatedBid.amount,
         });
       }
-      await autoBidConfig.save();
+      await autoBidConfig.save({ session });
     }
 
+    await session.commitTransaction();
     res.status(201).json({
       success: true,
       message: "Bid placed successfully",
@@ -101,10 +114,13 @@ export const placeBid = async (req: IRequest, res: Response) => {
       req.user?.id
     );
   } catch (error) {
+    await session.abortTransaction();
     res.status(400).json({
       message: "Error placing bid",
       error: (error as Error).message,
     });
+  } finally {
+    await session.endSession();
   }
 };
 
@@ -124,7 +140,7 @@ export const getBidsForItem = async (req: IRequest, res: Response) => {
 export const placeAutoBid = async (
   userId: string,
   itemId: string,
-  amount: number
+  amount: number,
 ) => {
   const config = await AutoBidConfig.findOne({ userId });
   if (
