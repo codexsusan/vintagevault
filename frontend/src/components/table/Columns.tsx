@@ -11,6 +11,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "../ui/dropdown-menu"
+import { useDeleteItem } from "@/hooks/itemHooks"
+import toast from "react-hot-toast"
 
 export type ItemData = {
     _id: string
@@ -75,8 +77,11 @@ export const columns: ColumnDef<ItemData>[] = [
     {
         id: "actions",
         header: () => <div className="text-center">Actions</div>,
-        cell: ({ row }) => {
+        cell: ({ row, table }) => {
             const data = row.original
+
+            const { mutate: deleteItem } = useDeleteItem();
+            const refetch = (table.options.meta as any).refetch;
 
             return (
                 <DropdownMenu>
@@ -97,9 +102,15 @@ export const columns: ColumnDef<ItemData>[] = [
                         <DropdownMenuItem
                             className="hover:cursor-pointer"
                             onClick={() => {
-                                // TODO: Delete
-                                console.log("Delete");
-                                console.log(data);
+                                deleteItem(data._id, {
+                                    onSuccess: () => {
+                                        toast.success("Item deleted successfully");
+                                        if (refetch) refetch();
+                                    },
+                                    onError: (error) => {
+                                        toast.error(error.message);
+                                    }
+                                });
                             }}
                         >
                             Delete

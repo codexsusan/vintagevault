@@ -1,12 +1,10 @@
-import { Button } from "@/components/ui/button";
 import {
-    ColumnDef,
-    flexRender,
-    getCoreRowModel,
-    useReactTable
-} from "@tanstack/react-table";
-import { useMediaQuery } from 'react-responsive';
-
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink
+} from "@/components/ui/pagination";
 import {
     Table,
     TableBody,
@@ -15,7 +13,14 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { useMemo } from "react";
+import {
+    ColumnDef,
+    flexRender,
+    getCoreRowModel,
+    useReactTable,
+} from "@tanstack/react-table";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "../ui/button";
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -24,6 +29,7 @@ interface DataTableProps<TData, TValue> {
     pageIndex: number
     pageSize: number
     onPageChange: (page: number) => void
+    refetch: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -33,53 +39,66 @@ export function DataTable<TData, TValue>({
     pageIndex,
     pageSize,
     onPageChange,
+    refetch,
 }: DataTableProps<TData, TValue>) {
-    const isMobile = useMediaQuery({ maxWidth: 768 });
-
-    const visibleColumns = useMemo(
-        () => columns.filter(column => !(isMobile && (column.meta as any)?.skipOnMobile)),
-        [columns, isMobile]
-    );
-
     const table = useReactTable({
         data,
-        columns: visibleColumns,
+        columns,
         pageCount,
         state: {
             pagination: {
-                pageIndex,
+                pageIndex: pageIndex - 1,
                 pageSize,
             },
         },
         onPaginationChange: (updater) => {
             if (typeof updater === 'function') {
-                const newState = updater({ pageIndex, pageSize });
-                onPageChange(newState.pageIndex);
+                const newState = updater({ pageIndex: pageIndex - 1, pageSize });
+                onPageChange(newState.pageIndex + 1);
             }
         },
         manualPagination: true,
         getCoreRowModel: getCoreRowModel(),
+        meta: { refetch },
     })
 
+    const getPageRange = () => {
+        const range = [];
+        const totalPages = pageCount;
+        const currentPage = pageIndex;
+        const displayedPages = 5;
+
+        let start = Math.max(1, currentPage - Math.floor(displayedPages / 2));
+        let end = Math.min(totalPages, start + displayedPages - 1);
+
+        if (end - start + 1 < displayedPages) {
+            start = Math.max(1, end - displayedPages + 1);
+        }
+
+        for (let i = start; i <= end; i++) {
+            range.push(i);
+        }
+
+        return range;
+    };
+
     return (
-        <div className="w-full overflow-x-auto">
+        <div>
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
-                                    )
-                                })}
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead key={header.id}>
+                                        {header.isPlaceholder
+                                            ? null
+                                            : flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                    </TableHead>
+                                ))}
                             </TableRow>
                         ))}
                     </TableHeader>
@@ -107,29 +126,56 @@ export function DataTable<TData, TValue>({
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 py-4">
-                <div className="text-sm text-gray-500">
-                    Page {pageIndex} of {pageCount}
-                </div>
-                <div className="flex items-center space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onPageChange(pageIndex - 1)}
-                        disabled={pageIndex === 1}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onPageChange(pageIndex + 1)}
-                        disabled={pageIndex === pageCount}
-                    >
-                        Next
-                    </Button>
-                </div>
+            <div className="flex items-center justify-end space-x-2 py-4">
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <Button
+                                className="gap-1 pl-2.5"
+                                variant={"ghost"}
+                                size={"default"}
+                                disabled={pageIndex === 1}
+                                onClick={() => onPageChange(pageIndex - 1)}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                                <span>Previous</span>
+                            </Button>
+                        </PaginationItem>
+
+                        {getPageRange().map((page) => (
+                            <PaginationItem key={page}>
+                                <PaginationLink
+                                    onClick={() => onPageChange(page)}
+                                    isActive={page === pageIndex}
+                                >
+                                    {page}
+                                </PaginationLink>
+                            </PaginationItem>
+                        ))}
+
+                        {pageCount > getPageRange()[getPageRange().length - 1] && (
+                            <PaginationItem>
+                                <PaginationEllipsis />
+                            </PaginationItem>
+                        )}
+
+                        <PaginationItem>
+                            <Button
+                                className="gap-1 pl-2.5"
+                                variant={"ghost"}
+                                size={"default"}
+                                disabled={pageIndex === pageCount}
+                                onClick={() => onPageChange(pageIndex + 1)}
+                            >
+                                <span>Next</span>
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
             </div>
         </div>
     )
 }
+
+

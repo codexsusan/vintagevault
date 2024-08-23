@@ -28,7 +28,7 @@ const bidSchema = z.object({
     isAutoBid: z.boolean(),
 });
 
-function NewItemDetails() {
+function ItemDetails() {
     useDocumentTitle("Item Details");
 
     const { id } = useParams<{ id: string }>();
@@ -46,7 +46,6 @@ function NewItemDetails() {
             isAutoBid: false,
         },
     });
-
 
     const autoBidConfig = autoBidConfigResponse?.data;
 
@@ -93,7 +92,6 @@ function NewItemDetails() {
 
     const handleAutoBidToggle = async (checked: boolean) => {
         if (checked && !autoBidConfig) {
-            // setIsAutoBidDialogOpen(true);
             return;
         }
 
@@ -103,8 +101,6 @@ function NewItemDetails() {
     };
 
     const { isValid, isSubmitting } = bidForm.formState;
-
-    // console.log(autoBidConfigResponse);
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -219,4 +215,4 @@ function NewItemDetails() {
     )
 }
 
-export default NewItemDetails
+export default ItemDetails

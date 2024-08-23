@@ -28,3 +28,21 @@ export const useGetItemDetails = (id: string) => {
     },
   });
 };
+
+export const useUpdateItem = () => {
+  return useMutation({
+    mutationKey: ["updateItem"],
+    mutationFn: async (props: { id: string; data: Item }) => {
+      return await itemService.updateItem(props);
+    },
+  });
+};
+
+export const useDeleteItem = () => {
+  return useMutation({
+    mutationKey: ["deleteItem"],
+    mutationFn: async (id: string) => {
+      return await itemService.deleteItem(id);
+    },
+  });
+};

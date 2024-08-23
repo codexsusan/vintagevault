@@ -1,4 +1,4 @@
-import { removeAuthToken } from "@/utils/token";
+import { removeAuthToken } from "@/utils/storage";
 import axios, {
   AxiosInstance,
   InternalAxiosRequestConfig,

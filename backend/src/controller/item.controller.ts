@@ -58,32 +58,6 @@ export const getAllItems = async (req: IRequest, res: Response) => {
   }
 };
 
-// Get a single item
-export const getItemById = async (req: IRequest, res: Response) => {
-  const itemId = req.params.id;
-  try {
-    const item = await Item.findById(itemId).select("-__v");
-    if (!item) {
-      return res.status(404).json({ message: "Item not found" });
-    }
-    const presignedUrl = await getPresignedUrl(item.image);
-    const itemWithPresignedUrl = { ...item.toObject(), image: presignedUrl };
-
-    // If there are no bids, reurning an empty array instead of null
-    item.bids = item.bids || [];
-    res.json({
-      success: true,
-      message: "Item fetched successfully",
-      item: itemWithPresignedUrl,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error fetching item",
-      error: (error as Error).message,
-    });
-  }
-};
-
 // Create a new item (admin only)
 export const createItem = async (req: IRequest, res: Response) => {
   try {
@@ -116,12 +90,41 @@ export const createItem = async (req: IRequest, res: Response) => {
   }
 };
 
+// Get a single item
+export const getItemById = async (req: IRequest, res: Response) => {
+  const itemId = req.params.id;
+  try {
+    const item = await Item.findById(itemId).select("-__v");
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+    const presignedUrl = await getPresignedUrl(item.image);
+    const itemWithPresignedUrl = { ...item.toObject(), image: presignedUrl, imageKey: item.image };
+
+    // If there are no bids, reurning an empty array instead of null
+    item.bids = item.bids || [];
+    res.json({
+      success: true,
+      message: "Item fetched successfully",
+      item: itemWithPresignedUrl,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching item",
+      error: (error as Error).message,
+    });
+  }
+};
+
+
 // Update an item (admin only)
 export const updateItem = async (req: IRequest, res: Response) => {
   try {
     const validatedItem = ItemSchema.parse(req.body);
+    
     const itemData = {
       ...validatedItem,
+      currentPrice: validatedItem.startingPrice,
       auctionEndTime: new Date(validatedItem.auctionEndTime),
     };
     const updatedItem = await Item.findByIdAndUpdate(req.params.id, itemData, {
@@ -141,7 +144,7 @@ export const updateItem = async (req: IRequest, res: Response) => {
     res.json({
       success: true,
       message: "Item updated successfully",
-      item: updatedItemWithPresignedUrl,
+      // item: updatedItemWithPresignedUrl,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -162,9 +165,11 @@ export const deleteItem = async (req: Request, res: Response) => {
   try {
     const deletedItem = await Item.findByIdAndDelete(req.params.id);
     if (!deletedItem) {
-      return res.status(404).json({ message: "Item not found" });
+      return res
+        .status(404)
+        .json({ message: "Item not found", success: false });
     }
-    res.json({ message: "Item deleted successfully" });
+    res.json({ message: "Item deleted successfully", success: true });
   } catch (error) {
     res.status(500).json({
       message: "Error deleting item",
@@ -204,7 +209,6 @@ export const searchItems = async (req: IRequest, res: Response) => {
     });
   }
 };
-
 
 // export const endAuction = async (itemId: string) => {
 //   const item = await Item.findById(itemId);

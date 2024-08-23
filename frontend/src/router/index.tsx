@@ -6,7 +6,7 @@ import UpdateItem from "@/pages/admin/UpdateItem";
 import Login from "@/pages/auth/Login";
 import NotFound from "@/pages/NotFound";
 import Home from "@/pages/user/Home";
-import NewItemDetails from "@/pages/user/NewItemDetails";
+import ItemDetails from "@/pages/user/ItemDetails";
 import { createBrowserRouter } from "react-router-dom";
 import InitialRoute from "./InitialRoute";
 
@@ -30,7 +30,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "/item/:id",
-                element: <NewItemDetails />
+                element: <ItemDetails />
                 // element: <Home />
             },
         ]

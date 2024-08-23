@@ -7,7 +7,6 @@ export interface IItem extends Document {
   description: string;
   startingPrice: number;
   currentPrice: number;
-  isPublished: boolean;
   auctionEndTime: Date;
   image: string;
   bids: string[];
@@ -32,10 +31,6 @@ const itemModel: Schema = new Schema({
   },
   currentPrice: {
     type: Number,
-    required: true,
-  },
-  isPublished: {
-    type: Boolean,
     required: true,
   },
   auctionEndTime: {

@@ -1,5 +1,5 @@
 import { LoginData } from "@/hooks/useAuth";
-import { setAuthToken } from "@/utils/token";
+import { setAuthToken, setUserRole } from "@/utils/storage";
 import { z } from "zod";
 import { ApiError, apiService } from "./apiServices";
 
@@ -16,8 +16,9 @@ class AuthService {
       const response = await apiService.post<LoginResponse>("auth/login", data);
       const validatedData = loginResponseSchema.parse(response);
 
-      // Storing token in local storage
+      // Storing in local storage
       setAuthToken(validatedData.token);
+      setUserRole(validatedData.role);
 
       return validatedData;
     } catch (error) {

@@ -7,15 +7,12 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 function Dashboard() {
     useDocumentTitle("Dashboard");
     const [pageIndex, setPageIndex] = useState(1);
     const pageSize = 10;
 
-    const { data, isLoading } = useGetItems({ page: pageIndex, limit: pageSize });
-
-    console.log(data);
+    const { data, isLoading, refetch } = useGetItems({ page: pageIndex, limit: pageSize });
 
     const navigate = useNavigate();
 
@@ -35,7 +32,9 @@ function Dashboard() {
             <div className="h-10 w-full mt-10 mx-auto">
                 {
                     isLoading ?
-                        <Loader2 className="h-10 w-10 animate-spin" />
+                        <div className="w-full h-full flex items-center justify-center">
+                            <Loader2 className="h-10 w-10 animate-spin" />
+                        </div>
                         : <DataTable
                             columns={columns}
                             data={data!.items}
@@ -43,6 +42,7 @@ function Dashboard() {
                             pageIndex={pageIndex}
                             pageSize={pageSize}
                             onPageChange={setPageIndex}
+                            refetch={refetch}
                         />
                 }
             </div>

@@ -2,11 +2,8 @@ import { Item } from "@/pages/admin/AddItem";
 import { z } from "zod";
 import { apiService } from "./apiServices";
 import { AxiosError } from "axios";
-
-const CreateItemResponseSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-});
+import { ApiResponse, ApiResponseSchema } from "@/types";
+import { combineDateAndTime } from "@/utils/dateandtime";
 
 const GetItemsResponseSchema = z.object({
   success: z.boolean(),
@@ -39,6 +36,7 @@ const GetItemDetailsResponseSchema = z.object({
     startingPrice: z.number(),
     currentPrice: z.number(),
     image: z.string(),
+    imageKey: z.string(),
     auctionEndTime: z.string(),
     bids: z.array(z.string()),
   }),
@@ -52,7 +50,6 @@ export type QueryParams = {
   sortOrder?: "asc" | "desc";
 };
 
-export type CreateItemResponse = z.infer<typeof CreateItemResponseSchema>;
 
 export type GetItemsResponse = z.infer<typeof GetItemsResponseSchema>;
 
@@ -61,23 +58,20 @@ export type GetItemDetailsResponse = z.infer<
 >;
 
 class ItemService {
-  async createItem(data: Item): Promise<CreateItemResponse> {
+  async createItem(data: Item): Promise<ApiResponse> {
     try {
-      const { auctionEndTime, ...otherValues } = data;
-      const [hours, minutes] = auctionEndTime.time.split(":").map(Number);
-      const combinedDateTime = new Date(auctionEndTime.date);
-      combinedDateTime.setHours(hours, minutes);
+      const combinedEndTime = combineDateAndTime(
+        data.auctionEndTime.date,
+        data.auctionEndTime.time
+      );
 
       const updatedData = {
-        ...otherValues,
-        auctionEndTime: combinedDateTime,
+        ...data,
+        auctionEndTime: combinedEndTime,
       };
 
-      const response = await apiService.post<CreateItemResponse>(
-        "items",
-        updatedData
-      );
-      const validatedData = CreateItemResponseSchema.parse(response);
+      const response = await apiService.post<ApiResponse>("items", updatedData);
+      const validatedData = ApiResponseSchema.parse(response);
       return validatedData;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -109,6 +103,44 @@ class ItemService {
       );
       // console.log(response);
       const validatedData = GetItemDetailsResponseSchema.parse(response);
+      return validatedData;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data.message);
+      }
+      throw error;
+    }
+  }
+
+  async updateItem({id, data}: {id: string, data: Item}): Promise<ApiResponse> {
+    try {
+      const combinedEndTime = combineDateAndTime(
+        data.auctionEndTime.date,
+        data.auctionEndTime.time
+      );
+
+      const updatedData = {
+        ...data,
+        auctionEndTime: combinedEndTime,
+      };
+      const response = await apiService.put<ApiResponse>(
+        `items/${id}`,
+        updatedData
+      );
+      const validatedData = ApiResponseSchema.parse(response);
+      return validatedData;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data.message);
+      }
+      throw error;
+    }
+  }
+
+  async deleteItem(id: string): Promise<ApiResponse> {
+    try {
+      const response = await apiService.delete<ApiResponse>(`items/${id}`);
+      const validatedData = ApiResponseSchema.parse(response);
       return validatedData;
     } catch (error) {
       if (error instanceof AxiosError) {

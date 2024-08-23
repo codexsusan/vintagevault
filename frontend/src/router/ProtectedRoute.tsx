@@ -1,4 +1,4 @@
-import { getAuthToken } from "@/utils/token";
+import { getAuthToken } from "@/utils/storage";
 import { Navigate, useLocation } from "react-router-dom";
 
 export default function ProtectedRoute({

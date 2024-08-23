@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { removeAuthToken } from '@/utils/token';
+import { ADMIN, getUserRole, removeAuthToken, USER } from '@/utils/storage';
 
 export default function Navbar() {
     const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -34,6 +34,13 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [prevScrollPos]);  // This effect will run when the scroll position changes
 
+    const currentUserRole = getUserRole();
+
+    const navigateTo =
+        currentUserRole === ADMIN ?
+            "/admin/dashboard" :
+            currentUserRole === USER ?
+                "/home" : "/auth/login";
 
     return (
         <nav id='navbar' className={cn(
@@ -45,12 +52,10 @@ export default function Navbar() {
 
                     {/* Logo Section */}
                     <div className="hidden md:flex flex-shrink-0">
-                        <Link to="/home" className="text-xl font-bold text-gray-800">
+                        <Link to={navigateTo} className="text-xl font-bold text-gray-800">
                             VintageVault
                         </Link>
                     </div>
-
-                    
 
                     {/* Logout Button */}
                     <Button

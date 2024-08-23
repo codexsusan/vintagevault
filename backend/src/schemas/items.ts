@@ -6,7 +6,6 @@ export const ItemSchema = z.object({
   startingPrice: z
     .number()
     .positive("Starting price must be a positive number"),
-  isPublished: z.boolean(),
   image: z.string(),
   auctionEndTime: z
     .string()
