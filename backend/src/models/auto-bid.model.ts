@@ -3,15 +3,20 @@ import { Document, model, Schema } from "mongoose";
 export interface IAutoBidConfig extends Document {
   _id: string;
   userId: string;
-  reservedAmount: number;
   maxBidAmount: number;
   bidAlertPercentage: number;
-  activeBids: string[];
+  activeBids: {
+    itemId: string;
+    allocatedAmount: number;
+  }[];
   status: "active" | "paused";
   createdAt: Date;
   updatedAt: Date;
-  availableFunds: number;
-  canPlaceAutoBid(amount: number): boolean;
+  getTotalReservedAmount(): number;
+  getAvailableFunds(): number;
+  canPlaceAutoBid(itemId: string, amount: number): boolean;
+  reserveFunds(itemId: string, amount: number): boolean;
+  releaseFunds(itemId: string, amount: number): void;
 }
 
 const autoBidSchema: Schema = new Schema(
@@ -20,11 +25,6 @@ const autoBidSchema: Schema = new Schema(
       type: String,
       required: true,
       unique: true,
-    },
-    reservedAmount: {
-      type: Number,
-      default: 0,
-      min: 0,
     },
     maxBidAmount: {
       type: Number,
@@ -39,8 +39,14 @@ const autoBidSchema: Schema = new Schema(
     },
     activeBids: [
       {
-        type: String,
-        ref: "Item",
+        itemId: {
+          type: String,
+          ref: "Item",
+        },
+        allocatedAmount: {
+          type: Number,
+          default: 0,
+        },
       },
     ],
     status: {
@@ -54,24 +60,65 @@ const autoBidSchema: Schema = new Schema(
   }
 );
 
-autoBidSchema.virtual("availableFunds").get(function (this: IAutoBidConfig) {
-  return this.maxBidAmount - this.reservedAmount;
-});
+autoBidSchema.methods.getTotalReservedAmount = function (
+  this: IAutoBidConfig
+): number {
+  return this.activeBids.reduce((total, bid) => total + bid.allocatedAmount, 0);
+};
+
+autoBidSchema.methods.getAvailableFunds = function (
+  this: IAutoBidConfig
+): number {
+  return this.maxBidAmount - this.getTotalReservedAmount();
+};
 
 autoBidSchema.methods.canPlaceAutoBid = function (
   this: IAutoBidConfig,
+  itemId: string,
   amount: number
 ): boolean {
-  return this.status === "active" && this.availableFunds >= amount;
+  const currentBid = this.activeBids.find((bid) => bid.itemId === itemId);
+  const availableForItem =
+    this.getAvailableFunds() + (currentBid?.allocatedAmount || 0);
+  return this.status === "active" && availableForItem >= amount && amount <= this.maxBidAmount;
 };
 
-autoBidSchema.pre("save", function (this: IAutoBidConfig, next) {
-  if (this.reservedAmount > this.maxBidAmount) {
-    this.reservedAmount = this.maxBidAmount;
+autoBidSchema.methods.reserveFunds = function (
+  this: IAutoBidConfig,
+  itemId: string,
+  amount: number
+): boolean {
+  const currentBid = this.activeBids.find((bid) => bid.itemId === itemId);
+  const availableForItem =
+    this.getAvailableFunds() + (currentBid?.allocatedAmount || 0);
+
+  if (availableForItem >= amount) {
+    if (currentBid) {
+      currentBid.allocatedAmount = amount;
+    } else {
+      this.activeBids.push({ itemId, allocatedAmount: amount });
+    }
+    return true;
   }
-  next();
-});
+  return false;
+};
+
+autoBidSchema.methods.releaseFunds = function (
+  this: IAutoBidConfig,
+  itemId: string,
+  amount: number
+): void {
+  const bidIndex = this.activeBids.findIndex((bid) => bid.itemId === itemId);
+  if (bidIndex !== -1) {
+    this.activeBids[bidIndex].allocatedAmount = Math.max(
+      0,
+      this.activeBids[bidIndex].allocatedAmount - amount
+    );
+    if (this.activeBids[bidIndex].allocatedAmount === 0) {
+      this.activeBids.splice(bidIndex, 1);
+    }
+  }
+};
 
 const AutoBidConfig = model<IAutoBidConfig>("AutoBidConfig", autoBidSchema);
-
 export default AutoBidConfig;

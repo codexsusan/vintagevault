@@ -11,6 +11,8 @@ export const dbConnection = async () => {
   // TODO: Change this to during submission
   const dbString: string = env["dev"] as string;
 
+  console.log(dbString);
+
   console.log("Connecting to database ...");
   try {
     await mongoose.connect(dbString).then(() => {

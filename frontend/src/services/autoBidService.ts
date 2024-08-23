@@ -1,4 +1,3 @@
-
 import { ApiResponse, ApiResponseSchema } from "@/types";
 import { AxiosError } from "axios";
 import { z } from "zod";
@@ -12,8 +11,14 @@ const GetAutoBidConfigResponseSchema = z.object({
     userId: z.string(),
     maxBidAmount: z.number(),
     bidAlertPercentage: z.number(),
-    activeBids: z.array(z.string()),
-    reservedAmount: z.number(),
+    activeBids: z.array(
+      z.object({
+        itemId: z.string(),
+        allocatedAmount: z.number(),
+      })
+    ),
+    totalReservedAmount: z.number(),
+    availableFunds: z.number(),
     status: z.enum(["active", "paused"]),
   }),
 });
@@ -21,8 +26,6 @@ const GetAutoBidConfigResponseSchema = z.object({
 export type GetAutoBidConfigResponse = z.infer<
   typeof GetAutoBidConfigResponseSchema
 >;
-
-
 
 export const AutoBidConfigSchema = z.object({
   maxBidAmount: z

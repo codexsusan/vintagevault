@@ -33,7 +33,7 @@ function NewItemDetails() {
 
     const { id } = useParams<{ id: string }>();
     const { data: itemData, isLoading: itemLoading, isError: itemError, refetch } = useGetItemDetails(id!);
-    const { data: autoBidConfigResponse, isLoading: configLoading } = useGetAutoBidConfig();
+    const { data: autoBidConfigResponse, isLoading: configLoading, refetch: refetchConfig } = useGetAutoBidConfig();
     const [isAutoBidDialogOpen, setIsAutoBidDialogOpen] = useState(false);
     const toggleAutoBid = useToggleAutoBid();
     const placeBid = usePlaceBid();
@@ -52,7 +52,8 @@ function NewItemDetails() {
 
     useEffect(() => {
         if (autoBidConfig && itemData) {
-            bidForm.setValue('isAutoBid', autoBidConfig.activeBids.includes(id!));
+            const isAutoBid = autoBidConfig.activeBids.find((bid) => bid.itemId === id) !== undefined;
+            bidForm.setValue('isAutoBid', isAutoBid);
         }
     }, [autoBidConfig, itemData, id]);
 
@@ -81,6 +82,7 @@ function NewItemDetails() {
             onSuccess: () => {
                 toast.success("Bid placed successfully!");
                 refetch();
+                refetchConfig();
             },
             onError: (error: Error) => {
                 toast.error(error.message);
@@ -107,8 +109,8 @@ function NewItemDetails() {
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex flex-col md:flex-row gap-8">
-                <Card className="w-full md:w-1/2 py-10">
-                    <img src={item.image} alt={item.name} className="w-full h-auto rounded-lg" />
+                <Card className="w-full md:w-1/2 py-10 flex items-center overflow-hidden">
+                    <img src={item.image} alt={item.name} className="w-full h-auto" />
                 </Card>
                 <div className='py-10 space-y-10 w-full'>
                     <h2 className='text-3xl font-bold text-gray-700 leading-relaxed'>
@@ -179,7 +181,9 @@ function NewItemDetails() {
 
                                 <Button
                                     className="w-full"
-                                    disabled={new Date(item.auctionEndTime) <= new Date() || !isValid || isSubmitting}
+                                    disabled={
+                                        new Date(item.auctionEndTime) <= new Date() || !isValid || isSubmitting || parseFloat(bidForm.watch('amount')) <= item.currentPrice
+                                    }
                                     type="submit"
                                 >
                                     <span>Submit Bid</span>
@@ -189,15 +193,18 @@ function NewItemDetails() {
                         <AutoBidDialog
                             data={autoBidConfigResponse?.data}
                             isOpen={isAutoBidDialogOpen}
-                            onClose={() => setIsAutoBidDialogOpen(false)}
+                            onClose={() => {
+                                setIsAutoBidDialogOpen(false);
+                                refetchConfig();
+                            }}
                             itemId={id!}
                         >
-                            <Button 
+                            <Button
                                 className='mt-5 w-full'
                                 onClick={(e) => {
                                     e.preventDefault();
                                     setIsAutoBidDialogOpen(true);
-                                }} 
+                                }}
                                 variant={"secondary"}
                             >
                                 {

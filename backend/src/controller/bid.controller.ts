@@ -4,6 +4,7 @@ import Item from "../models/item.model";
 import Bid, { IBid } from "../models/bid.model";
 import { IRequest } from "../types";
 import { processAutoBids } from "./autobid.controller";
+import AutoBidConfig from "../models/auto-bid.model";
 
 export const placeBid = async (req: IRequest, res: Response) => {
   try {
@@ -38,6 +39,38 @@ export const placeBid = async (req: IRequest, res: Response) => {
       return res
         .status(400)
         .json({ message: "Bid must be higher than current price" });
+    }
+
+    // Check if the user has auto-bidding enabled
+    const autoBidConfig = await AutoBidConfig.findOne({ userId: req.user?.id });
+    if (
+      autoBidConfig &&
+      autoBidConfig.activeBids.some((bid) => bid.itemId === validatedBid.itemId)
+    ) {
+      if (validatedBid.amount > autoBidConfig.maxBidAmount) {
+        return res.status(400).json({
+          message: "Please increase your maximum auto-bid amount.",
+        });
+      }
+    }
+    // If auto-bid is enabled, update the allocated amount
+    if (
+      autoBidConfig &&
+      autoBidConfig.activeBids.some((bid) => bid.itemId === validatedBid.itemId)
+    ) {
+      const itemBidIndex = autoBidConfig.activeBids.findIndex(
+        (bid) => bid.itemId === validatedBid.itemId
+      );
+      if (itemBidIndex !== -1) {
+        autoBidConfig.activeBids[itemBidIndex].allocatedAmount =
+          validatedBid.amount;
+      } else {
+        autoBidConfig.activeBids.push({
+          itemId: validatedBid.itemId,
+          allocatedAmount: validatedBid.amount,
+        });
+      }
+      await autoBidConfig.save();
     }
 
     const newBid = new Bid({
@@ -92,7 +125,25 @@ export const placeAutoBid = async (
   userId: string,
   itemId: string,
   amount: number
-): Promise<IBid> => {
+) => {
+  const config = await AutoBidConfig.findOne({ userId });
+  if (
+    !config ||
+    !config.canPlaceAutoBid(itemId, amount) ||
+    amount > config.maxBidAmount
+  ) {
+    return null;
+  }
+
+  const item = await Item.findById(itemId);
+  if (
+    !item ||
+    new Date() > item.auctionEndTime ||
+    amount <= item.currentPrice
+  ) {
+    return null;
+  }
+
   const newBid = new Bid({
     userId,
     itemId,
@@ -100,14 +151,23 @@ export const placeAutoBid = async (
     timestamp: new Date(),
     isAutoBid: true,
   });
+
   await newBid.save();
 
-  const item = await Item.findById(itemId);
-  if (item) {
-    item.currentPrice = amount;
-    item.bids.push(newBid._id);
-    await item.save();
+  item.currentPrice = amount;
+  item.bids.push(newBid._id);
+  await item.save();
+
+  // Update the AutoBidConfig
+  const itemBidIndex = config.activeBids.findIndex(
+    (bid) => bid.itemId === itemId
+  );
+  if (itemBidIndex !== -1) {
+    config.activeBids[itemBidIndex].allocatedAmount = amount;
+  } else {
+    config.activeBids.push({ itemId, allocatedAmount: amount });
   }
+  await config.save();
 
   return newBid;
 };
