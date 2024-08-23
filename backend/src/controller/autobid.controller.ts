@@ -16,7 +16,7 @@ export const setAutoBidConfig = async (req: IRequest, res: Response) => {
       config.bidAlertPercentage = validatedConfig.bidAlertPercentage;
 
       // Adjust active bids if necessary
-      const totalAllocated = config.getTotalReservedAmount();
+      const totalAllocated = config.getTotalAllocatedAmount();
       if (totalAllocated > validatedConfig.maxBidAmount) {
         // Reduce allocated amounts proportionally
         const reductionFactor = validatedConfig.maxBidAmount / totalAllocated;
@@ -52,6 +52,7 @@ export const setAutoBidConfig = async (req: IRequest, res: Response) => {
 export const getAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
     const userId = req.user!.id;
+    console.log(userId);
     const config = await AutoBidConfig.findOne({ userId });
     if (!config) {
       return res
@@ -67,7 +68,7 @@ export const getAutoBidConfig = async (req: IRequest, res: Response) => {
         maxBidAmount: config.maxBidAmount,
         bidAlertPercentage: config.bidAlertPercentage,
         activeBids: config.activeBids,
-        totalReservedAmount: config.getTotalReservedAmount(),
+        totalAllocatedAmount: config.getTotalAllocatedAmount(),
         availableFunds: config.getAvailableFunds(),
         status: config.status,
       },
@@ -146,7 +147,7 @@ export const processAutoBids = async (
     for (const config of autoBidConfigs) {
       const newBidAmount = Math.min(highestBid + 1, config.maxBidAmount);
 
-      if (config.canPlaceAutoBid(itemId, newBidAmount)) {
+      if (config.canPlaceAutoBid( newBidAmount)) {
         // Place auto-bid
         const newBid = await placeAutoBid(config.userId, itemId, newBidAmount);
 
@@ -167,7 +168,7 @@ export const processAutoBids = async (
 
           // Check if alert threshold is reached
           if (
-            config.getTotalReservedAmount() / config.maxBidAmount >=
+            config.getTotalAllocatedAmount() / config.maxBidAmount >=
             config.bidAlertPercentage / 100
           ) {
             // TODO: Send notification to user

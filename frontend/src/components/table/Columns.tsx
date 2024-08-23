@@ -28,22 +28,31 @@ export const columns: ColumnDef<ItemData>[] = [
         cell: ({ row }) => {
             return <div className="text-center">{row.getValue("name")}</div>
         },
+        meta: {
+            skipOnMobile: true
+        }
     },
     {
         accessorKey: "image",
-        header: () => <div className="text-center">Image</div>,
+        header: () => <div className="text-center ">Image</div>,
         cell: ({ row }) => {
-            return <div className=" flex justify-center items-center">
-                <img src={row.getValue("image")} alt="item-image" className="w-20 h-20 rounded-md" />
-            </div>
+            return (
+                <div className="flex justify-center items-center">
+                    <img src={row.getValue("image")} alt="item-image" className="w-16 h-16 md:w-20 md:h-20 rounded-md object-cover" />
+                </div>
+            );
         },
+
     },
     {
         accessorKey: "startingPrice",
-        header: () => <div className="text-center hidden lg:block">Starting Price</div>,
+        header: () => <div className="text-center">Starting Price</div>,
         cell: ({ row }) => {
-            return <div className="text-center hidden lg:block">{row.getValue("startingPrice")}</div>
+            return <div className="text-center">{row.getValue("startingPrice")}</div>
         },
+        meta: {
+            skipOnMobile: true,
+        }
     },
     {
         accessorKey: "currentPrice",

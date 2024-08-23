@@ -35,7 +35,7 @@ const CountDown = ({ endTime, classname }: CountdownTimerProps) => {
         const seconds = distance - days * 24 * 60 * 60 - hours * 60 * 60 - minutes * 60;
 
         setTimeRemaining(
-            `${days}d ${hours}h ${minutes}m ${seconds}s`
+            `${days > 0 ? `${days}d ` : ''} ${hours > 0 ? `${hours}h ` : ''} ${minutes > 0 ? `${minutes}m ` : ''} ${seconds > 0 ? `${seconds}s` : ''}`
         );
     };
 

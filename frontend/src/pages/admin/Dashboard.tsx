@@ -3,21 +3,27 @@ import { DataTable } from "@/components/table/DataTable";
 import { Button } from "@/components/ui/button";
 import { useGetItems } from "@/hooks/itemHooks";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 
 function Dashboard() {
     useDocumentTitle("Dashboard");
+    const [pageIndex, setPageIndex] = useState(1);
+    const pageSize = 10;
 
-    const { data, isLoading } = useGetItems({ page: 1, limit: 10 });
+    const { data, isLoading } = useGetItems({ page: pageIndex, limit: pageSize });
 
-    // const data = getData();
+    console.log(data);
 
     const navigate = useNavigate();
 
     const handleNewNavigate = () => {
         navigate("/admin/item/new");
     };
+
+    const pageCount = isLoading ? 0 : Math.ceil(data!.total / pageSize);
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
             <div className="flex justify-between items-center">
@@ -27,7 +33,18 @@ function Dashboard() {
                 </Button>
             </div>
             <div className="h-10 w-full mt-10 mx-auto">
-                {isLoading ? <p>Loading...</p> : <DataTable columns={columns} data={data!.items} />}
+                {
+                    isLoading ?
+                        <Loader2 className="h-10 w-10 animate-spin" />
+                        : <DataTable
+                            columns={columns}
+                            data={data!.items}
+                            pageCount={pageCount}
+                            pageIndex={pageIndex}
+                            pageSize={pageSize}
+                            onPageChange={setPageIndex}
+                        />
+                }
             </div>
         </div>
     );

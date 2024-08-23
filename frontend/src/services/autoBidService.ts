@@ -17,7 +17,7 @@ const GetAutoBidConfigResponseSchema = z.object({
         allocatedAmount: z.number(),
       })
     ),
-    totalReservedAmount: z.number(),
+    totalAllocatedAmount: z.number(),
     availableFunds: z.number(),
     status: z.enum(["active", "paused"]),
   }),

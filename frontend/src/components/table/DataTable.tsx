@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
     ColumnDef,
     flexRender,
     getCoreRowModel,
-    getPaginationRowModel,
-    useReactTable,
-} from "@tanstack/react-table"
+    useReactTable
+} from "@tanstack/react-table";
+import { useMediaQuery } from 'react-responsive';
 
 import {
     Table,
@@ -14,26 +14,55 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+import { useMemo } from "react";
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
+    pageCount: number
+    pageIndex: number
+    pageSize: number
+    onPageChange: (page: number) => void
 }
 
 export function DataTable<TData, TValue>({
     columns,
     data,
+    pageCount,
+    pageIndex,
+    pageSize,
+    onPageChange,
 }: DataTableProps<TData, TValue>) {
+    const isMobile = useMediaQuery({ maxWidth: 768 });
+
+    const visibleColumns = useMemo(
+        () => columns.filter(column => !(isMobile && (column.meta as any)?.skipOnMobile)),
+        [columns, isMobile]
+    );
+
     const table = useReactTable({
         data,
-        columns,
+        columns: visibleColumns,
+        pageCount,
+        state: {
+            pagination: {
+                pageIndex,
+                pageSize,
+            },
+        },
+        onPaginationChange: (updater) => {
+            if (typeof updater === 'function') {
+                const newState = updater({ pageIndex, pageSize });
+                onPageChange(newState.pageIndex);
+            }
+        },
+        manualPagination: true,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
     })
 
     return (
-        <div>
+        <div className="w-full overflow-x-auto">
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>
@@ -78,23 +107,28 @@ export function DataTable<TData, TValue>({
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    Previous
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                >
-                    Next
-                </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 py-4">
+                <div className="text-sm text-gray-500">
+                    Page {pageIndex} of {pageCount}
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onPageChange(pageIndex - 1)}
+                        disabled={pageIndex === 1}
+                    >
+                        Previous
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onPageChange(pageIndex + 1)}
+                        disabled={pageIndex === pageCount}
+                    >
+                        Next
+                    </Button>
+                </div>
             </div>
         </div>
     )

@@ -43,21 +43,31 @@ export const placeBid = async (req: IRequest, res: Response) => {
 
     // Check if the user has auto-bidding enabled
     const autoBidConfig = await AutoBidConfig.findOne({ userId: req.user?.id });
-    if (
-      autoBidConfig &&
-      autoBidConfig.activeBids.some((bid) => bid.itemId === validatedBid.itemId)
-    ) {
-      if (validatedBid.amount > autoBidConfig.maxBidAmount) {
+    if (autoBidConfig) {
+      const currentAllocatedAmount = autoBidConfig.getTotalAllocatedAmount();
+      const newTotalAllocated = currentAllocatedAmount + validatedBid.amount;
+
+      if (newTotalAllocated > autoBidConfig.maxBidAmount) {
         return res.status(400).json({
-          message: "Please increase your maximum auto-bid amount.",
+          message:
+            "Please increase your maximum auto-bid amount or remove some items from auto-bidding.",
         });
       }
     }
-    // If auto-bid is enabled, update the allocated amount
-    if (
-      autoBidConfig &&
-      autoBidConfig.activeBids.some((bid) => bid.itemId === validatedBid.itemId)
-    ) {
+
+    const newBid = new Bid({
+      ...validatedBid,
+      userId: req.user?.id,
+      isAutoBid: false,
+    });
+    await newBid.save();
+
+    item.currentPrice = validatedBid.amount;
+    item.bids.push(newBid._id);
+    await item.save();
+
+    // If auto-bidding is enabled, update the allocated amount
+    if (autoBidConfig) {
       const itemBidIndex = autoBidConfig.activeBids.findIndex(
         (bid) => bid.itemId === validatedBid.itemId
       );
@@ -72,17 +82,6 @@ export const placeBid = async (req: IRequest, res: Response) => {
       }
       await autoBidConfig.save();
     }
-
-    const newBid = new Bid({
-      ...validatedBid,
-      userId: req.user?.id,
-      isAutoBid: false,
-    });
-    await newBid.save();
-
-    item.currentPrice = validatedBid.amount;
-    item.bids.push(newBid._id);
-    await item.save();
 
     res.status(201).json({
       success: true,
@@ -102,9 +101,10 @@ export const placeBid = async (req: IRequest, res: Response) => {
       req.user?.id
     );
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error placing bid", error: (error as Error).message });
+    res.status(400).json({
+      message: "Error placing bid",
+      error: (error as Error).message,
+    });
   }
 };
 
@@ -129,7 +129,7 @@ export const placeAutoBid = async (
   const config = await AutoBidConfig.findOne({ userId });
   if (
     !config ||
-    !config.canPlaceAutoBid(itemId, amount) ||
+    !config.canPlaceAutoBid(amount) ||
     amount > config.maxBidAmount
   ) {
     return null;

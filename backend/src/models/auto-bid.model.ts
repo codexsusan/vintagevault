@@ -12,11 +12,9 @@ export interface IAutoBidConfig extends Document {
   status: "active" | "paused";
   createdAt: Date;
   updatedAt: Date;
-  getTotalReservedAmount(): number;
+  getTotalAllocatedAmount(): number;
   getAvailableFunds(): number;
-  canPlaceAutoBid(itemId: string, amount: number): boolean;
-  reserveFunds(itemId: string, amount: number): boolean;
-  releaseFunds(itemId: string, amount: number): void;
+  canPlaceAutoBid(amount: number): boolean;
 }
 
 const autoBidSchema: Schema = new Schema(
@@ -60,7 +58,7 @@ const autoBidSchema: Schema = new Schema(
   }
 );
 
-autoBidSchema.methods.getTotalReservedAmount = function (
+autoBidSchema.methods.getTotalAllocatedAmount = function (
   this: IAutoBidConfig
 ): number {
   return this.activeBids.reduce((total, bid) => total + bid.allocatedAmount, 0);
@@ -69,55 +67,14 @@ autoBidSchema.methods.getTotalReservedAmount = function (
 autoBidSchema.methods.getAvailableFunds = function (
   this: IAutoBidConfig
 ): number {
-  return this.maxBidAmount - this.getTotalReservedAmount();
+  return this.maxBidAmount - this.getTotalAllocatedAmount();
 };
 
 autoBidSchema.methods.canPlaceAutoBid = function (
   this: IAutoBidConfig,
-  itemId: string,
   amount: number
 ): boolean {
-  const currentBid = this.activeBids.find((bid) => bid.itemId === itemId);
-  const availableForItem =
-    this.getAvailableFunds() + (currentBid?.allocatedAmount || 0);
-  return this.status === "active" && availableForItem >= amount && amount <= this.maxBidAmount;
-};
-
-autoBidSchema.methods.reserveFunds = function (
-  this: IAutoBidConfig,
-  itemId: string,
-  amount: number
-): boolean {
-  const currentBid = this.activeBids.find((bid) => bid.itemId === itemId);
-  const availableForItem =
-    this.getAvailableFunds() + (currentBid?.allocatedAmount || 0);
-
-  if (availableForItem >= amount) {
-    if (currentBid) {
-      currentBid.allocatedAmount = amount;
-    } else {
-      this.activeBids.push({ itemId, allocatedAmount: amount });
-    }
-    return true;
-  }
-  return false;
-};
-
-autoBidSchema.methods.releaseFunds = function (
-  this: IAutoBidConfig,
-  itemId: string,
-  amount: number
-): void {
-  const bidIndex = this.activeBids.findIndex((bid) => bid.itemId === itemId);
-  if (bidIndex !== -1) {
-    this.activeBids[bidIndex].allocatedAmount = Math.max(
-      0,
-      this.activeBids[bidIndex].allocatedAmount - amount
-    );
-    if (this.activeBids[bidIndex].allocatedAmount === 0) {
-      this.activeBids.splice(bidIndex, 1);
-    }
-  }
+  return this.status === "active" && this.getAvailableFunds() >= amount;
 };
 
 const AutoBidConfig = model<IAutoBidConfig>("AutoBidConfig", autoBidSchema);

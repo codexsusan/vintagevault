@@ -47,9 +47,9 @@ const GetItemDetailsResponseSchema = z.object({
 export type QueryParams = {
   page: number;
   limit: number;
-  search: string;
-  sortBy: string;
-  sortOrder: "asc" | "desc";
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 };
 
 export type CreateItemResponse = z.infer<typeof CreateItemResponseSchema>;
