@@ -3,7 +3,9 @@ import AutoBidConfig, { IAutoBidConfig } from "../models/auto-bid.model";
 import { AutoBidConfigSchema } from "../schemas/auto-bid-config";
 import { IRequest } from "../types";
 import Item from "../models/item.model";
-import { placeAutoBid } from "./bid.controller";
+// import { placeAutoBid } from "./bid.controller";
+import Bid from "../models/bid.model";
+import { startSession } from "mongoose";
 
 export const setAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
@@ -52,7 +54,7 @@ export const setAutoBidConfig = async (req: IRequest, res: Response) => {
 export const getAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    console.log(userId);
+    // console.log(userId);
     const config = await AutoBidConfig.findOne({ userId });
     if (!config) {
       return res
@@ -128,77 +130,89 @@ export const processAutoBids = async (
   currentBid: number,
   excludeUserId?: string
 ) => {
-  const item = await Item.findById(itemId);
-  if (!item) return;
+  const session = await startSession();
+  session.startTransaction();
 
-  let highestBid = currentBid;
-  let bidPlaced = true;
-  let lastBidder: string | undefined = excludeUserId;
+  try {
+    const item = await Item.findById(itemId).session(session);
+    if (!item) {
+      await session.abortTransaction();
+      return;
+    }
 
-  while (bidPlaced) {
-    bidPlaced = false;
+    let highestBid = currentBid;
+    let bidPlaced = true;
 
-    const autoBidConfigs = await AutoBidConfig.find({
-      "activeBids.itemId": itemId,
-      userId: { $ne: lastBidder },
-      status: "active",
-    }).sort({ createdAt: 1 });
+    while (bidPlaced) {
+      bidPlaced = false;
 
-    for (const config of autoBidConfigs) {
-      const newBidAmount = Math.min(highestBid + 1, config.maxBidAmount);
+      const autoBidConfigs = await AutoBidConfig.find({
+        "activeBids.itemId": itemId,
+        userId: { $ne: excludeUserId },
+        status: "active",
+      })
+        .sort({ createdAt: 1 })
+        .session(session);
 
-      if (config.canPlaceAutoBid( newBidAmount)) {
-        // Place auto-bid
-        const newBid = await placeAutoBid(config.userId, itemId, newBidAmount);
+      for (const config of autoBidConfigs) {
+        const newBidAmount = Math.min(highestBid + 1, config.maxBidAmount);
 
-        if (newBid) {
-          // Update the allocated amount for this item
-          const itemBidIndex = config.activeBids.findIndex(
-            (bid) => bid.itemId === itemId
-          );
-          if (itemBidIndex !== -1) {
-            config.activeBids[itemBidIndex].allocatedAmount = newBidAmount;
-          } else {
-            config.activeBids.push({ itemId, allocatedAmount: newBidAmount });
+        if (
+          config.canPlaceAutoBid(itemId, newBidAmount) &&
+          newBidAmount > highestBid
+        ) {
+          if (new Date() <= item.auctionEndTime) {
+            const newBid = new Bid({
+              userId: config.userId,
+              itemId: item._id,
+              amount: newBidAmount,
+              timestamp: new Date(),
+              isAutoBid: true,
+            });
+            await newBid.save({ session });
+
+            item.currentPrice = newBidAmount;
+            item.bids.push(newBid._id);
+            await item.save({ session });
+
+            config.updateAllocatedAmount(itemId, newBidAmount);
+
+            if (config.getAvailableFunds() === 0) {
+              config.status = "paused";
+              // TODO: Send notification that auto-bidding has stopped
+              console.log(
+                `Auto-bidding stopped for user ${config.userId} due to insufficient funds`
+              );
+            }
+
+            await config.save({ session });
+
+            highestBid = newBidAmount;
+            bidPlaced = true;
+            excludeUserId = config.userId;
+
+            // Check if alert threshold is reached
+            if (
+              config.getTotalAllocatedAmount() / config.maxBidAmount >=
+              config.bidAlertPercentage / 100
+            ) {
+              // TODO: Send notification to user
+              console.log(
+                `Alert: User ${config.userId} has reached ${config.bidAlertPercentage}% of their maximum bid amount`
+              );
+            }
+
+            break; // Exit the loop after placing a bid
           }
-
-          highestBid = newBidAmount;
-          bidPlaced = true;
-          lastBidder = config.userId;
-
-          // Check if alert threshold is reached
-          if (
-            config.getTotalAllocatedAmount() / config.maxBidAmount >=
-            config.bidAlertPercentage / 100
-          ) {
-            // TODO: Send notification to user
-            console.log(
-              `Alert: User ${config.userId} has reached ${config.bidAlertPercentage}% of their maximum bid amount`
-            );
-          }
-
-          // Check if max bid amount is reached
-          if (
-            config.getAvailableFunds() === 0 ||
-            newBidAmount >= config.maxBidAmount
-          ) {
-            config.status = "paused";
-            // TODO: Send notification that auto-bidding has stopped
-            console.log(
-              `Auto-bidding stopped for user ${config.userId} due to insufficient funds`
-            );
-          }
-
-          await config.save();
-          break; // Exit the loop after placing a bid
         }
       }
     }
-  }
 
-  // Update the item's current price
-  if (highestBid > currentBid) {
-    item.currentPrice = highestBid;
-    await item.save();
+    await session.commitTransaction();
+  } catch (error) {
+    console.error("Error in processAutoBids:", error);
+    await session.abortTransaction();
+  } finally {
+    session.endSession();
   }
 };

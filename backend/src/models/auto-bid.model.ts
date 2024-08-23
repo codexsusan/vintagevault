@@ -14,7 +14,8 @@ export interface IAutoBidConfig extends Document {
   updatedAt: Date;
   getTotalAllocatedAmount(): number;
   getAvailableFunds(): number;
-  canPlaceAutoBid(amount: number): boolean;
+  canPlaceAutoBid(itemId: string, amount: number): boolean;
+  updateAllocatedAmount(itemId: string, amount: number): void;
 }
 
 const autoBidSchema: Schema = new Schema(
@@ -71,10 +72,32 @@ autoBidSchema.methods.getAvailableFunds = function (
 };
 
 autoBidSchema.methods.canPlaceAutoBid = function (
-  this: IAutoBidConfig,
+  itemId: string,
   amount: number
 ): boolean {
-  return this.status === "active" && this.getAvailableFunds() >= amount;
+  const currentBid = this.activeBids.find(
+    (bid: { itemId: string; allocatedAmount: number }) => bid.itemId === itemId
+  );
+  const additionalAmount = currentBid
+    ? amount - currentBid.allocatedAmount
+    : amount;
+  return (
+    this.status === "active" && this.getAvailableFunds() >= additionalAmount
+  );
+};
+
+autoBidSchema.methods.updateAllocatedAmount = function (
+  itemId: string,
+  amount: number
+): void {
+  const bidIndex = this.activeBids.findIndex(
+    (bid: { itemId: string; allocatedAmount: number }) => bid.itemId === itemId
+  );
+  if (bidIndex !== -1) {
+    this.activeBids[bidIndex].allocatedAmount = amount;
+  } else {
+    this.activeBids.push({ itemId, allocatedAmount: amount });
+  }
 };
 
 const AutoBidConfig = model<IAutoBidConfig>("AutoBidConfig", autoBidSchema);
