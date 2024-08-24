@@ -6,6 +6,8 @@ import Item from "../models/item.model";
 // import { placeAutoBid } from "./bid.controller";
 import Bid from "../models/bid.model";
 import { startSession } from "mongoose";
+import { getUserById } from "./auth.controller";
+import { sendMail } from "../mail";
 
 export const setAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
@@ -179,13 +181,23 @@ export const processAutoBids = async (
 
             if (config.getAvailableFunds() === 0) {
               config.status = "paused";
-              // TODO: Send notification that auto-bidding has stopped
+              await config.save({ session });
+              const user = getUserById(config.userId);
+
+              await sendMail(
+                user?.email!,
+                "Auto-Bidding Maximum Reached",
+                "autoBidMaxReached",
+                {
+                  USERNAME: user?.name!,
+                  COMPANY_NAME: "Vintage Vault",
+                  MAX_AMOUNT: config.maxBidAmount.toString(),
+                }
+              );
               console.log(
-                `Auto-bidding stopped for user ${config.userId} due to insufficient funds`
+                `Auto-bidding stopped for user ${user?.email} due to insufficient funds`
               );
             }
-
-            await config.save({ session });
 
             highestBid = newBidAmount;
             bidPlaced = true;
@@ -194,15 +206,23 @@ export const processAutoBids = async (
             // Check if alert threshold is reached
             if (
               config.getTotalAllocatedAmount() / config.maxBidAmount >=
-              config.bidAlertPercentage / 100
+                config.bidAlertPercentage / 100 &&
+              !config.alertSent
             ) {
-              // TODO: Send notification to user
+              const user = getUserById(config.userId);
+              await sendMail(user?.email!, "Auto-Bid Alert", "autoBidAlert", {
+                USERNAME: user?.name!,
+                COMPANY_NAME: "Vintage Vault",
+                PERCENTAGE: config.bidAlertPercentage.toString(),
+              });
               console.log(
                 `Alert: User ${config.userId} has reached ${config.bidAlertPercentage}% of their maximum bid amount`
               );
+              config.alertSent = true;
+              await config.save({ session });
             }
 
-            break; // Exit the loop after placing a bid
+            break;
           }
         }
       }

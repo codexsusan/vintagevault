@@ -5,6 +5,8 @@ export interface User {
   id: string;
   username: string;
   password: string;
+  email: string;
+  name: string;
   role: "admin" | "user";
 }
 
@@ -30,3 +32,5 @@ export interface FileTransfer {
   buffer: Buffer;
   key?: string;
 }
+
+export type TemplateData = Record<string, string>;

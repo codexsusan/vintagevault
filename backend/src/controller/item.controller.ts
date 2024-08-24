@@ -15,10 +15,15 @@ export const getAllItems = async (req: IRequest, res: Response) => {
     const sortBy = req.query.sortBy as string;
     const sortOrder = req.query.sortOrder as SortOrder;
 
-    // Build the query
+    // Check if the user is an admin
+    const isAdmin = req.user?.role === "admin";
+
     let query = Item.find();
 
-    // Apply search filter
+     if (!isAdmin) {
+       query = query.where("auctionEndTime").gt(new Date() as any);
+     }
+
     if (search) {
       query = query.or([
         { name: { $regex: search, $options: "i" } },
@@ -26,7 +31,6 @@ export const getAllItems = async (req: IRequest, res: Response) => {
       ]);
     }
 
-    // Apply sorting
     if (sortBy === "price") {
       query = query.sort({ currentPrice: sortOrder });
     }

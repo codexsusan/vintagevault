@@ -12,6 +12,7 @@ export interface IAutoBidConfig extends Document {
   status: "active" | "paused";
   createdAt: Date;
   updatedAt: Date;
+  alertSent: boolean;
   getTotalAllocatedAmount(): number;
   getAvailableFunds(): number;
   canPlaceAutoBid(itemId: string, amount: number): boolean;
@@ -53,6 +54,7 @@ const autoBidSchema: Schema = new Schema(
       enum: ["active", "paused"],
       default: "active",
     },
+    alertSent: { type: Boolean, default: false },
   },
   {
     timestamps: true,
