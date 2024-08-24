@@ -17,7 +17,6 @@ This project is a web-based auction application for antique items, built using t
 Before you begin, ensure you have the following installed:
 - Node.js (v14.0.0 or later)
 - npm (v6.0.0 or later)
-- MongoDB (v4.0.0 or later)
 
 ## Installation
 
@@ -44,7 +43,41 @@ Before you begin, ensure you have the following installed:
 
 ## Configuration
 
-1. Create a `.env` file in the `backend` directory with the content that is in the `.env.example` file. As of right now, I have shared the secrets with you, so you can use them for testing purposes only. Not the general way to do it.
+1. Create a `.env` file in the `backend` directory and paste the secrets that is shared with you in the task submission email.
+2. For testing notifying users, you can change the user email in `backend/src/constants.ts` file. You can keep your email and login in through the same account.
+
+    For example: 
+    ```ts
+            export const hardcodedUsers: User[] = [
+            // .. keep the existing users
+                {
+                    id: "5432167890",
+                    name: "Susan",
+                    email: "your-email@gmail.com",
+                    username: "user1",
+                    password: "user1",
+                    role: "user",
+                },
+            // ... keep the existing users
+            ];
+    ```
+3. Here are few login credentials for testing purpose:
+
+    For user1:
+    - Username: `user1`
+    - Password: `user1`
+
+    For user2:
+    - Username: `user2`
+    - Password: `user2`
+
+    For admin1:
+    - Username: `admin1`
+    - Password: `admin1`
+
+    For admin2:
+    - Username: `admin2`
+    - Password: `admin2`
 
 
 ## Running the Application

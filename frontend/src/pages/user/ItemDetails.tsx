@@ -105,9 +105,9 @@ function ItemDetails() {
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex flex-col md:flex-row gap-8">
-                <Card className="w-full md:w-1/2 py-10 flex items-center overflow-hidden">
+                <div className="w-full md:w-1/2 py-10 flex items-center overflow-hidden border-0">
                     <img src={item.image} alt={item.name} className="w-full h-auto" />
-                </Card>
+                </div>
                 <div className='py-10 space-y-10 w-full'>
                     <h2 className='text-3xl font-bold text-gray-700 leading-relaxed'>
                         {item.name}
@@ -210,6 +210,9 @@ function ItemDetails() {
                         </AutoBidDialog>
                     </Card>
                 </div>
+            </div>
+            <div className='mt-0 md:mt-5 text-gray-500 text-base font-medium'>
+                {item.description}
             </div>
         </div>
     )

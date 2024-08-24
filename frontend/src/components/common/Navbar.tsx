@@ -52,7 +52,7 @@ export default function Navbar() {
                 <div className="flex items-center justify-between h-16">
 
                     {/* Logo Section */}
-                    <div className="hidden md:flex flex-shrink-0">
+                    <div className="flex flex-shrink-0">
                         <Link to={navigateTo} className="text-xl font-bold text-gray-800">
                             VintageVault
                         </Link>

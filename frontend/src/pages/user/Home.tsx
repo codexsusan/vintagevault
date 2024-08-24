@@ -86,7 +86,7 @@ function Home() {
                             <p className="text-sm text-gray-600 mb-2 line-clamp-3">{item.description}</p>
                             <p className="text-xl font-bold">${item.currentPrice.toFixed(2)}</p>
                         </CardContent>
-                        <CardFooter className="mt-auto pt-4">
+                        <CardFooter className="mt-auto">
                             <Link to={`/item/${item._id}`} className="w-full">
                                 <Button className="w-full">Bid Now</Button>
                             </Link>
