@@ -6,8 +6,9 @@ import Item from "../models/item.model";
 // import { placeAutoBid } from "./bid.controller";
 import Bid from "../models/bid.model";
 import { startSession } from "mongoose";
-import { getUserById } from "./auth.controller";
+// import { getUserById } from "./auth.controller";
 import { sendMail } from "../mail";
+import { getUserById } from "../data/user";
 
 export const setAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
@@ -182,10 +183,10 @@ export const processAutoBids = async (
             if (config.getAvailableFunds() === 0) {
               config.status = "paused";
               await config.save({ session });
-              const user = getUserById(config.userId);
+              const user = await getUserById(config.userId);
 
               await sendMail(
-                user?.email!,
+                user!.email,
                 "Auto-Bidding Maximum Reached",
                 "autoBidMaxReached",
                 {
@@ -209,7 +210,7 @@ export const processAutoBids = async (
                 config.bidAlertPercentage / 100 &&
               !config.alertSent
             ) {
-              const user = getUserById(config.userId);
+              const user = await getUserById(config.userId);
               await sendMail(user?.email!, "Auto-Bid Alert", "autoBidAlert", {
                 USERNAME: user?.name!,
                 COMPANY_NAME: "Vintage Vault",

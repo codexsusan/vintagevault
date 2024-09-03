@@ -20,6 +20,8 @@ export const BUCKET_SECRET_ACCESS_KEY = process.env.BUCKET_SECRET_ACCESS_KEY;
 export const FROM_ADDRESS = process.env.FROM_ADDRESS;
 export const RESEND_SECRET = process.env.RESEND_SECRET;
 
+export const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS || "12");
+
 
 export const hardcodedUsers: User[] = [
   {

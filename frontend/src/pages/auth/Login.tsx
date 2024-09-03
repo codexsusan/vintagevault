@@ -9,11 +9,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 const formSchema = z.object({
-    username: z.string().min(3, { message: "Username must be atleast 3 characters." }),
+    email: z.string().email({ message: "Invalid email address" }),
     password: z
         .string()
         .min(3, { message: "Password must be atleast 3 characters." })
@@ -28,7 +28,7 @@ function Login() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            username: "",
+            email: "",
             password: "",
         },
     });
@@ -36,14 +36,14 @@ function Login() {
     const onSubmit = (values: z.infer<typeof formSchema>) => {
         loginMutation(values, {
             onSuccess: (data: LoginResponse) => {
-                if (data.role === "admin") {
+                if (data.userType === "admin") {
                     navigate("/admin/dashboard");
-                } else if (data.role === "user") {
+                } else if (data.userType === "user") {
                     navigate("/home");
                 }
             },
             onError: (error: Error) => {
-                toast.error(error.message, { duration: 2000 });
+                toast.error(error.message, { duration: 4000 });
             },
         });
     };
@@ -59,12 +59,12 @@ function Login() {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
                         <FormField
                             control={form.control}
-                            name="username"
+                            name="email"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Username</FormLabel>
+                                    <FormLabel>Email</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="johndoe" {...field} />
+                                        <Input type="email" placeholder="johndoe@example.com" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -92,6 +92,11 @@ function Login() {
                         </Button>
                     </form>
                 </Form>
+                <div className="flex mt-4 justify-center">
+                    <p className="text-center text-gray-500 text-sm">
+                        Don't have an account? <Link to="/auth/register" className="text-blue-500 hover:underline">Register</Link>
+                    </p>
+                </div>
             </div>
         </div>
     )

@@ -9,6 +9,7 @@ import Home from "@/pages/user/Home";
 import ItemDetails from "@/pages/user/ItemDetails";
 import { createBrowserRouter } from "react-router-dom";
 import InitialRoute from "./InitialRoute";
+import Register from "@/pages/auth/Register";
 
 const router = createBrowserRouter([
     {
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
     {
         path: "/auth/login",
         element: <Login />,
+    },
+    {
+        path: "/auth/register",
+        element: <Register />,
     },
     {
         path: "/",
