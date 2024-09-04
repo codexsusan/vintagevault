@@ -1,5 +1,4 @@
-import { model, Schema, Document } from "mongoose";
-
+import mongoose, { Document, model, Schema } from "mongoose";
 export interface IBid extends Document {
   _id: string;
   userId: string;
@@ -13,6 +12,7 @@ const bidSchema: Schema = new Schema({
   userId: {
     type: String,
     required: true,
+    ref: "User",
   },
   itemId: {
     type: String,

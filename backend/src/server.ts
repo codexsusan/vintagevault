@@ -11,10 +11,13 @@ import bidRoutes from "./routes/bid.routes";
 import autoBidRoutes from "./routes/auto-bid.routes";
 import imagesRoutes from "./routes/images.routes";
 import { IRequest } from "./types";
+import cron from "node-cron";
 
 import "./models/item.model";
 import "./models/bid.model";
 import "./models/auto-bid.model";
+import { checkAuctionsStatus } from "./lib/auction";
+import userRoutes from "./routes/user.routes";
 
 const app = express();
 const port = PORT || 3000;
@@ -30,6 +33,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/bids", bidRoutes);
 app.use("/api/auto-bid", autoBidRoutes);
@@ -44,6 +48,8 @@ app.get("/api/test", verifyToken, (req: IRequest, res) => {
 app.use("*", (_req: Request, res: Response): void => {
   res.status(404).send({ message: "Not found" });
 });
+
+cron.schedule("* * * * *", checkAuctionsStatus);
 
 app.use(
   (_err: Error, _req: Request, res: Response, _next: NextFunction): void => {

@@ -3,6 +3,7 @@ import {
     createItem,
     deleteItem,
     getAllItems,
+    getItemBiddingHistory,
     getItemById,
     searchItems,
     updateItem,
@@ -20,6 +21,9 @@ router.get("/search", searchItems);
 
 // Get a single item
 router.get("/:id", getItemById);
+
+// Get item bidding history
+router.get("/:id/bidding-history", getItemBiddingHistory);
 
 // Create a new item (admin only)
 router.post("/", isAdmin, createItem);

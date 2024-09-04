@@ -13,7 +13,7 @@ import { getUserById } from "../data/user";
 export const setAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
     const validatedConfig = AutoBidConfigSchema.parse(req.body);
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     let config = await AutoBidConfig.findOne({ userId });
     if (config) {
@@ -56,7 +56,7 @@ export const setAutoBidConfig = async (req: IRequest, res: Response) => {
 
 export const getAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     // console.log(userId);
     const config = await AutoBidConfig.findOne({ userId });
     if (!config) {
@@ -90,7 +90,7 @@ export const getAutoBidConfig = async (req: IRequest, res: Response) => {
 export const toggleAutoBid = async (req: IRequest, res: Response) => {
   try {
     const { itemId } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const config = await AutoBidConfig.findOne({ userId });
 
     if (!config) {
@@ -195,6 +195,7 @@ export const processAutoBids = async (
                   MAX_AMOUNT: config.maxBidAmount.toString(),
                 }
               );
+              // TODO: Notification when the total amount was bid + state of the item (i.e won, lose, in-progress)
               console.log(
                 `Auto-bidding stopped for user ${user?.email} due to insufficient funds`
               );

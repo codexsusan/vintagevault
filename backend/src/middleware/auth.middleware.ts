@@ -16,9 +16,9 @@ export const verifyToken = (
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as {
-      username: string;
+      userId: string;
+      email: string;
       role: string;
-      id: string;
     };
     (req as any).user = decoded;
     next();

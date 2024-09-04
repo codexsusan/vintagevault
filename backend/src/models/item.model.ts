@@ -1,4 +1,6 @@
-import { model, Schema } from "mongoose";
+import mongoose, { model, Schema } from "mongoose";
+import { IUser } from "./user.model";
+import { IBid } from "./bid.model";
 
 export interface IItem extends Document {
   _id: string;
@@ -10,6 +12,8 @@ export interface IItem extends Document {
   auctionEndTime: Date;
   image: string;
   bids: string[];
+  highestBid: string | null;
+  awarded: boolean;
 }
 
 const itemModel: Schema = new Schema({
@@ -20,6 +24,7 @@ const itemModel: Schema = new Schema({
   adminId: {
     type: String,
     required: true,
+    ref: "User",
   },
   description: {
     type: String,
@@ -47,6 +52,14 @@ const itemModel: Schema = new Schema({
       ref: "Bid",
     },
   ],
+  highestBid: {
+    type: String || null,
+    ref: "Bid",
+  },
+  awarded: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Item = model<IItem>("Item", itemModel);

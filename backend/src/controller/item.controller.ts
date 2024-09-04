@@ -5,6 +5,9 @@ import { getPresignedUrl } from "../middleware/images.middleware";
 import Item from "../models/item.model";
 import { ItemSchema } from "../schemas/items";
 import { IRequest } from "../types";
+import Bid from "../models/bid.model";
+import { IUser } from "../models/user.model";
+import { getUserById } from "../data/user";
 
 export const getAllItems = async (req: IRequest, res: Response) => {
   try {
@@ -16,13 +19,13 @@ export const getAllItems = async (req: IRequest, res: Response) => {
     const sortOrder = req.query.sortOrder as SortOrder;
 
     // Check if the user is an admin
-    const isAdmin = req.user?.role === "admin";
+    // const isAdmin = req.user?.role === "admin";
 
     let query = Item.find();
 
-     if (!isAdmin) {
-       query = query.where("auctionEndTime").gt(new Date() as any);
-     }
+    //  if (!isAdmin) {
+    //    query = query.where("auctionEndTime").gt(new Date() as any);
+    //  }
 
     if (search) {
       query = query.or([
@@ -45,6 +48,8 @@ export const getAllItems = async (req: IRequest, res: Response) => {
         return { ...item.toObject(), image: presignedUrl };
       })
     );
+
+    // console.log(itemsWithPresignedUrl);
 
     res.json({
       success: true,
@@ -70,7 +75,8 @@ export const createItem = async (req: IRequest, res: Response) => {
       ...validatedItem,
       auctionEndTime: new Date(validatedItem.auctionEndTime),
       currentPrice: validatedItem.startingPrice,
-      adminId: req.user!.id,
+      adminId: req.user!.userId,
+      highestBid: null,
       bids: [],
     };
 
@@ -81,6 +87,7 @@ export const createItem = async (req: IRequest, res: Response) => {
       success: true,
     });
   } catch (error) {
+    console.log(error);
     if (error instanceof z.ZodError) {
       res
         .status(400)
@@ -102,21 +109,84 @@ export const getItemById = async (req: IRequest, res: Response) => {
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
-    const presignedUrl = await getPresignedUrl(item.image);
-    const itemWithPresignedUrl = { ...item.toObject(), image: presignedUrl, imageKey: item.image };
-
-    // If there are no bids, reurning an empty array instead of null
+    
+    // If there are no bids, returning an empty array instead of null
     item.bids = item.bids || [];
+
+    const presignedUrl = await getPresignedUrl(item.image);
+    let itemWithPresignedUrl = { ...item.toObject(), image: presignedUrl, imageKey: item.image };
+
+
+    if(item.awarded){
+      const highestBid = await Bid.findById(item.highestBid);
+      const highestBidder = await getUserById(highestBid!.userId);
+
+      // const userProfilePresignedUrl = await getPresignedUrl(highestBidder!.profilePicture);
+      const finalItemData = {
+        ...itemWithPresignedUrl,
+        user: {
+          _id: highestBidder!._id,
+          // email: highestBidder!.email,
+          name: highestBidder!.name,
+          // profilePicture: userProfilePresignedUrl,
+        },
+      };
+      console.log(finalItemData);
+      return res.json({
+        success: true,
+        message: "Item fetched successfully",
+        item: finalItemData,
+      });
+    }
+
+    // console.log(itemWithPresignedUrl);
     res.json({
       success: true,
       message: "Item fetched successfully",
       item: itemWithPresignedUrl,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       message: "Error fetching item",
       error: (error as Error).message,
     });
+  }
+};
+
+
+export const getItemBiddingHistory = async (req: IRequest, res: Response) => {
+  const itemId = req.params.id;
+  try {
+    // Fetch item bidding history from the database in such a way that latest one is first
+    const biddingHistory = await Bid.find({ itemId }).sort({ timestamp: -1 }).select("-__v");
+
+    const biddingHistoryWithUserData = await Promise.all(
+      biddingHistory.map(async (bid) => {
+        const user = await getUserById(bid.userId);
+        // const userData = user!.toObject();
+        return {
+          ...bid.toObject(),
+          user: {
+            _id: user!._id,
+            email: user!.email,
+            name: user!.name,
+          },
+        };
+      })
+    );
+    
+    res.json({
+      message: "Item bidding history fetched successfully",
+      success: true,
+      data: biddingHistoryWithUserData,
+    });
+  } catch (error) {
+     console.log(error);
+     res.status(500).json({
+       message: "Error fetching item",
+       error: (error as Error).message,
+     });
   }
 };
 
@@ -128,7 +198,7 @@ export const updateItem = async (req: IRequest, res: Response) => {
     
     const itemData = {
       ...validatedItem,
-      currentPrice: validatedItem.startingPrice,
+      // currentPrice: validatedItem.startingPrice,
       auctionEndTime: new Date(validatedItem.auctionEndTime),
     };
     const updatedItem = await Item.findByIdAndUpdate(req.params.id, itemData, {

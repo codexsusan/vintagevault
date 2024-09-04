@@ -18,33 +18,48 @@ export const placeBid = async (req: IRequest, res: Response) => {
     };
     const validatedBid = BidSchema.parse(bidData);
 
+    // Check if the item is found or not.
     const item = await Item.findById(validatedBid.itemId).session(session);
     if (!item) {
       await session.abortTransaction();
-      return res.status(404).json({ message: "Item not found" });
+      return res
+        .status(404)
+        .json({ message: "Item not found", success: false });
     }
 
     if (new Date() > item.auctionEndTime) {
       await session.abortTransaction();
-      return res.status(400).json({ message: "Auction has ended" });
+      return res
+        .status(400)
+        .json({ message: "Auction has ended", success: false });
     }
 
     if (validatedBid.amount <= item.currentPrice) {
       await session.abortTransaction();
+      return res.status(400).json({
+        message: "Bid must be higher than current price",
+        success: false,
+      });
+    }
+
+    const highestBid = await Bid.findById(item.highestBid);
+    if (highestBid?.userId === req.user?.userId) {
+      await session.abortTransaction();
       return res
         .status(400)
-        .json({ message: "Bid must be higher than current price" });
+        .json({ message: "You already have the highest bid", success: false });
     }
 
     const newBid = new Bid({
       ...validatedBid,
-      userId: req.user?.id,
+      userId: req.user?.userId,
       isAutoBid: false,
     });
     await newBid.save({ session });
 
     item.currentPrice = validatedBid.amount;
     item.bids.push(newBid._id);
+    item.highestBid = newBid._id;
     await item.save({ session });
 
     await session.commitTransaction();
@@ -60,15 +75,18 @@ export const placeBid = async (req: IRequest, res: Response) => {
       },
     });
 
+    // TODO: Notification to all those who have bidded in the item before
+
     // Trigger auto-bidding for other users
     await processAutoBids(
       item._id.toString(),
       validatedBid.amount,
-      req.user?.id
+      req.user?.userId
     );
   } catch (error) {
     await session.abortTransaction();
     res.status(400).json({
+      success: false,
       message: "Error placing bid",
       error: (error as Error).message,
     });

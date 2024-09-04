@@ -38,7 +38,7 @@ export const registerUser = async (req: Request, res: Response) => {
       email,
       profilePicture: "",
       name,
-      userType: "user",
+      userType: "admin",
       password: hashedPassword,
     });
 
@@ -83,7 +83,7 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 
     const token = jwt.sign(
-      { userId: user._id, email: user.email }, 
+      { userId: user._id, email: user.email, role: user.userType }, 
       JWT_SECRET, 
       {
         expiresIn: "7d",

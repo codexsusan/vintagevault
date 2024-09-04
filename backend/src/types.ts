@@ -12,9 +12,9 @@ export interface User {
 
 export interface IRequest extends Request {
   user?: {
-    username: string;
+    userId: string;
+    email: string;
     role: "admin" | "user";
-    id: string;
   };
 }
 

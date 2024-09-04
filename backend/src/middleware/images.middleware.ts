@@ -31,12 +31,11 @@ const upload = multer({
     key: function (req, file, cb) {
       cb(
         null,
-        "uploads/" +
+        "scopic/" +
         Date.now().toString() +
         "-" +
         file.originalname.split(" ").join("-")
       );
-      console.log("Reached here");
     },
     contentType: multerS3.AUTO_CONTENT_TYPE,
   }),

@@ -1,4 +1,6 @@
-import { Document, model, Schema } from "mongoose";
+import mongoose, { Document, model, Schema } from "mongoose";
+import { IUser } from "./user.model";
+import { IItem } from "./item.model";
 
 export interface IAutoBidConfig extends Document {
   _id: string;
@@ -25,6 +27,7 @@ const autoBidSchema: Schema = new Schema(
       type: String,
       required: true,
       unique: true,
+      ref: "User",
     },
     maxBidAmount: {
       type: Number,
