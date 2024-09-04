@@ -46,3 +46,12 @@ export const useDeleteItem = () => {
     },
   });
 };
+
+export const useGetItemBids = (id: string) => {
+  return useQuery({
+    queryKey: ["getItemBids", id],
+    queryFn: async () => {
+      return await itemService.getItemBiddingHistory(id);
+    },
+  });
+};

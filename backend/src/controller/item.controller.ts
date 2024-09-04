@@ -109,15 +109,18 @@ export const getItemById = async (req: IRequest, res: Response) => {
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
-    
+
     // If there are no bids, returning an empty array instead of null
     item.bids = item.bids || [];
 
     const presignedUrl = await getPresignedUrl(item.image);
-    let itemWithPresignedUrl = { ...item.toObject(), image: presignedUrl, imageKey: item.image };
+    let itemWithPresignedUrl = {
+      ...item.toObject(),
+      image: presignedUrl,
+      imageKey: item.image,
+    };
 
-
-    if(item.awarded){
+    if (item.awarded) {
       const highestBid = await Bid.findById(item.highestBid);
       const highestBidder = await getUserById(highestBid!.userId);
 
@@ -154,19 +157,24 @@ export const getItemById = async (req: IRequest, res: Response) => {
   }
 };
 
-
 export const getItemBiddingHistory = async (req: IRequest, res: Response) => {
   const itemId = req.params.id;
   try {
     // Fetch item bidding history from the database in such a way that latest one is first
-    const biddingHistory = await Bid.find({ itemId }).sort({ timestamp: -1 }).select("-__v");
+    const biddingHistory = await Bid.find({ itemId })
+      .sort({ timestamp: -1 })
+      .select("-__v");
 
     const biddingHistoryWithUserData = await Promise.all(
       biddingHistory.map(async (bid) => {
         const user = await getUserById(bid.userId);
         // const userData = user!.toObject();
         return {
-          ...bid.toObject(),
+          _id: bid._id,
+          itemId: bid.itemId,
+          amount: bid.amount,
+          timestamp: bid.timestamp,
+          isAutoBid: bid.isAutoBid,
           user: {
             _id: user!._id,
             email: user!.email,
@@ -175,27 +183,26 @@ export const getItemBiddingHistory = async (req: IRequest, res: Response) => {
         };
       })
     );
-    
+
     res.json({
       message: "Item bidding history fetched successfully",
       success: true,
       data: biddingHistoryWithUserData,
     });
   } catch (error) {
-     console.log(error);
-     res.status(500).json({
-       message: "Error fetching item",
-       error: (error as Error).message,
-     });
+    console.log(error);
+    res.status(500).json({
+      message: "Error fetching item",
+      error: (error as Error).message,
+    });
   }
 };
-
 
 // Update an item (admin only)
 export const updateItem = async (req: IRequest, res: Response) => {
   try {
     const validatedItem = ItemSchema.parse(req.body);
-    
+
     const itemData = {
       ...validatedItem,
       // currentPrice: validatedItem.startingPrice,

@@ -38,7 +38,7 @@ export const registerUser = async (req: Request, res: Response) => {
       email,
       profilePicture: "",
       name,
-      userType: "admin",
+      userType: "user",
       password: hashedPassword,
     });
 

@@ -12,6 +12,7 @@ import autoBidRoutes from "./routes/auto-bid.routes";
 import imagesRoutes from "./routes/images.routes";
 import { IRequest } from "./types";
 import cron from "node-cron";
+import PDFDocument from "pdfkit";
 
 import "./models/item.model";
 import "./models/bid.model";
@@ -42,6 +43,31 @@ app.use("/api/images", imagesRoutes);
 app.get("/api/test", verifyToken, (req: IRequest, res) => {
   console.log(req.user);
   res.json({ message: "Hello World!" });
+});
+
+app.get("/generate-pdf", (req, res) => {
+  try {
+    const doc = new PDFDocument();
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=dummy.pdf");
+
+    doc.pipe(res);
+
+    doc.fontSize(25).text("Hello from PDFKit!", { align: "center" });
+    doc.moveDown();
+    doc
+      .fontSize(16)
+      .text("This is a dummy PDF file generated for testing purposes.");
+
+    doc.end();
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error generating PDF",
+      error: (error as Error).message,
+    });
+  }
 });
 
 // Error handling
