@@ -40,7 +40,6 @@ const GetItemDetailsResponseSchema = z.object({
     auctionEndTime: z.string(),
     bids: z.array(z.string()),
     awarded: z.boolean(),
-    highestBid: z.string(),
     user: z
       .object({
         _id: z.string(),
@@ -131,7 +130,7 @@ class ItemService {
       const response = await apiService.get<GetItemDetailsResponse>(
         `items/${id}`
       );
-      // console.log(response);
+      console.log(response);
       const validatedData = GetItemDetailsResponseSchema.parse(response);
       return validatedData;
     } catch (error) {

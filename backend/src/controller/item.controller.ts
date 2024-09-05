@@ -8,6 +8,7 @@ import { IRequest } from "../types";
 import Bid from "../models/bid.model";
 import { IUser } from "../models/user.model";
 import { getUserById } from "../data/user";
+import AutoBidConfig from "../models/auto-bid.model";
 
 export const getAllItems = async (req: IRequest, res: Response) => {
   try {
@@ -245,6 +246,8 @@ export const updateItem = async (req: IRequest, res: Response) => {
 export const deleteItem = async (req: Request, res: Response) => {
   try {
     const deletedItem = await Item.findByIdAndDelete(req.params.id);
+    await Bid.deleteMany({ itemId: req.params.id });
+    await AutoBidConfig.deleteMany({ itemId: req.params.id });
     if (!deletedItem) {
       return res
         .status(404)

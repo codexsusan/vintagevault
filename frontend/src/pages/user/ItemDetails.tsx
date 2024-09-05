@@ -1,12 +1,13 @@
 import AuctionEnded from '@/components/item-details/AuctionEnded';
 import AuctionNotEnded from '@/components/item-details/AuctionNotEnded';
-import BiddingHistory from '@/components/item-details/BiddingHistory';
+import BiddingHistoryTable from '@/components/item-details/BiddingHistoryTable';
 import { useGetItemDetails } from '@/hooks/itemHooks';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useParams } from 'react-router-dom';
 
 function ItemDetails() {
     useDocumentTitle("Item Details");
+
     const { id } = useParams<{ id: string }>();
     const { data: itemData, isLoading: itemLoading, isError: itemError, refetch } = useGetItemDetails(id!);
 
@@ -17,9 +18,11 @@ function ItemDetails() {
     if (itemLoading) {
         return <div className="flex justify-center items-center h-screen">Loading...</div>;
     }
+    console.log({ itemData, itemLoading, itemError });
     if (itemError || !itemData || !itemData.item) {
         return <div className="flex justify-center items-center h-screen">Error fetching item details</div>;
     }
+
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
@@ -45,7 +48,8 @@ function ItemDetails() {
                 </p>
             </div>
             <div>
-                <BiddingHistory id={id!} />
+                {/* <BiddingHistory id={id!} /> */}
+                <BiddingHistoryTable id={id!} />
             </div>
         </div>
     );

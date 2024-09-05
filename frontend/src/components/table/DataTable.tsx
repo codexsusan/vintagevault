@@ -29,7 +29,6 @@ interface DataTableProps<TData, TValue> {
     pageIndex: number
     pageSize: number
     onPageChange: (page: number) => void
-    refetch: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -39,7 +38,6 @@ export function DataTable<TData, TValue>({
     pageIndex,
     pageSize,
     onPageChange,
-    refetch,
 }: DataTableProps<TData, TValue>) {
     const table = useReactTable({
         data,
@@ -59,7 +57,7 @@ export function DataTable<TData, TValue>({
         },
         manualPagination: true,
         getCoreRowModel: getCoreRowModel(),
-        meta: { refetch },
+        // meta: { refetch },
     })
 
     const getPageRange = () => {
@@ -69,7 +67,7 @@ export function DataTable<TData, TValue>({
         const displayedPages = 5;
 
         let start = Math.max(1, currentPage - Math.floor(displayedPages / 2));
-        let end = Math.min(totalPages, start + displayedPages - 1);
+        const end = Math.min(totalPages, start + displayedPages - 1);
 
         if (end - start + 1 < displayedPages) {
             start = Math.max(1, end - displayedPages + 1);

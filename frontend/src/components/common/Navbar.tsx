@@ -1,9 +1,17 @@
 import { cn } from '@/lib/utils';
 
+import { ADMIN, getUserRole, removeAuthToken, removeUserRole, USER } from '@/utils/storage';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { ADMIN, getUserRole, removeAuthToken, removeUserRole, USER } from '@/utils/storage';
+
+import { LogOut, User, UserPen } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from "../ui/dropdown-menu";
 
 export default function Navbar() {
     const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -51,21 +59,31 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
 
-                    {/* Logo Section */}
                     <div className="flex flex-shrink-0">
                         <Link to={navigateTo} className="text-xl font-bold text-gray-800">
                             VintageVault
                         </Link>
                     </div>
 
-                    {/* Logout Button */}
-                    <Button
-                        className='bg-blue-600 hover:bg-blue-700'
-                        onClick={handleLogout}
-                        size={"default"}
-                        variant={"outline"}>
-                        <span className="text-base font-normal text-white">Logout</span>
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 rounded-full bg-slate-50">
+                                <User className="h-5 w-5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent >
+                            <Link to={"/profile"}>
+                                <DropdownMenuItem className="hover:cursor-pointer flex justify-around font-medium font-inter" >
+                                    <UserPen className="h-5 w-5" />
+                                    <p>Profile</p>
+                                </DropdownMenuItem>
+                            </Link>
+                            <DropdownMenuItem onClick={handleLogout} className="hover:cursor-pointer flex justify-around font-medium font-inter">
+                                <LogOut className="h-5 w-5" />
+                                <p>Log out</p>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </nav >

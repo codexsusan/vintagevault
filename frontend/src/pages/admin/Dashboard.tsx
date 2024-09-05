@@ -12,7 +12,7 @@ function Dashboard() {
     const [pageIndex, setPageIndex] = useState(1);
     const pageSize = 10;
 
-    const { data, isLoading, refetch } = useGetItems({ page: pageIndex, limit: pageSize });
+    const { data, isLoading } = useGetItems({ page: pageIndex, limit: pageSize });
 
     const navigate = useNavigate();
 
@@ -42,7 +42,6 @@ function Dashboard() {
                             pageIndex={pageIndex}
                             pageSize={pageSize}
                             onPageChange={setPageIndex}
-                            refetch={refetch}
                         />
                 }
             </div>

@@ -10,6 +10,7 @@ import { useGetAutoBidConfig, useToggleAutoBid } from '@/hooks/autoBidHooks';
 import { usePlaceBid } from '@/hooks/bidHooks';
 import { GetItemDetailsResponse } from '@/services/itemService';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -35,6 +36,8 @@ const AuctionNotEnded = ({
     itemData: GetItemDetailsResponse,
     triggerRefetch: () => void
 }) => {
+
+    const queryClient = useQueryClient();
     const [isAutoBidDialogOpen, setIsAutoBidDialogOpen] = useState(false);
     const { data: autoBidConfigResponse, isLoading: configLoading, refetch: refetchConfig } = useGetAutoBidConfig();
 
@@ -78,12 +81,18 @@ const AuctionNotEnded = ({
                 toast.success("Bid placed successfully!");
                 triggerRefetch();
                 refetchConfig();
+                queryClient.invalidateQueries({
+                    queryKey: ["getItemBids", id]
+                });
+                // bidForm.reset();
             },
             onError: (error: Error) => {
                 toast.error(error.message);
             },
+            onSettled: () => {
+                bidForm.reset();
+            },
         });
-        bidForm.reset();
     };
 
     const handleAutoBidToggle = async (checked: boolean) => {

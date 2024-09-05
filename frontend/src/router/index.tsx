@@ -10,6 +10,7 @@ import ItemDetails from "@/pages/user/ItemDetails";
 import { createBrowserRouter } from "react-router-dom";
 import InitialRoute from "./InitialRoute";
 import Register from "@/pages/auth/Register";
+import Profile from "@/pages/user/Profile";
 
 const router = createBrowserRouter([
     {
@@ -27,8 +28,11 @@ const router = createBrowserRouter([
     {
         path: "/",
         element: <UserLayout />,
-        // errorElement: <NotFound />,
         children: [
+            {
+                path: "/profile",
+                element: <Profile />
+            },
             {
                 path: "/home",
                 element: <Home />
