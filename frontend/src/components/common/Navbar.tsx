@@ -72,12 +72,17 @@ export default function Navbar() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent >
-                            <Link to={"/profile"}>
-                                <DropdownMenuItem className="hover:cursor-pointer flex justify-around font-medium font-inter" >
-                                    <UserPen className="h-5 w-5" />
-                                    <p>Profile</p>
-                                </DropdownMenuItem>
-                            </Link>
+                            {
+                                currentUserRole === USER && (
+                                    <Link to={"/profile"}>
+                                        <DropdownMenuItem className="hover:cursor-pointer flex justify-around font-medium font-inter" >
+                                            <UserPen className="h-5 w-5" />
+                                            <p>Profile</p>
+                                        </DropdownMenuItem>
+                                    </Link>
+                                )
+                            }
+
                             <DropdownMenuItem onClick={handleLogout} className="hover:cursor-pointer flex justify-around font-medium font-inter">
                                 <LogOut className="h-5 w-5" />
                                 <p>Log out</p>

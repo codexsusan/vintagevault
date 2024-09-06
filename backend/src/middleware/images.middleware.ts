@@ -12,7 +12,7 @@ import {
   BUCKET_SECRET_ACCESS_KEY,
 } from "../constants";
 
-const s3 = new S3Client({
+export const s3 = new S3Client({
   endpoint: BUCKET_ENDPOINT,
   region: BUCKET_REGION,
   credentials: {

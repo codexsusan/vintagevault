@@ -4,10 +4,10 @@ import { cn } from '@/lib/utils';
 
 interface CountdownTimerProps {
     endTime: Date;
-    classname?: string;
+    className?: string;
 }
 
-const CountDown = ({ endTime, classname }: CountdownTimerProps) => {
+const CountDown = ({ endTime, className }: CountdownTimerProps) => {
     const [timeRemaining, setTimeRemaining] = useState<string>('');
     const [isEnded, setIsEnded] = useState<boolean>(false);
 
@@ -39,7 +39,7 @@ const CountDown = ({ endTime, classname }: CountdownTimerProps) => {
         );
     };
 
-    return <div className={cn(classname, '')}>{isEnded ? 'Ended' : timeRemaining}</div>;
+    return <div className={cn(className, '')}>{isEnded ? 'Ended' : timeRemaining}</div>;
 };
 
 export default CountDown;

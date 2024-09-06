@@ -1,84 +1,48 @@
 import { GetItemDetailsResponse } from '@/services/itemService';
 import { Info } from 'lucide-react';
-import { Card } from '../ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
-const AuctionEnded = (
-    {
-        // id,
-        itemData,
-        // triggerRefetch
-    }: {
-        id: string
-        itemData: GetItemDetailsResponse,
-        triggerRefetch: () => void
-    }
-) => {
-    const item = itemData.item;
+const AuctionEnded = ({
+    itemData,
+}: {
+    id: string;
+    itemData: GetItemDetailsResponse;
+    triggerRefetch: () => void;
+}) => {
+    const { item } = itemData;
     const totalBids = item.bids.length;
 
-    // const { data: bidsData, isLoading, isError } = useGetItemBids(id!);
-
-    // if (isLoading) {
-    //     return <div className="flex justify-center items-center h-screen">Loading...</div>;
-    // }
-
-    // if (isError || !bidsData) {
-    //     return <div className="flex justify-center items-center h-screen">Error fetching item details</div>;
-    // }
-
-    // console.log(bidsData);
-
     return (
-        <Card className='p-6 w-full space-y-5'>
-            <div className='flex justify-between items-center'>
-                <div>
-                    <p className='text-lg font-normal leading-relaxed'>Final Bid Amount: </p>
-                    <p className='text-4xl font-semibold leading-relaxed text-gray-600'>$ {item.currentPrice.toFixed(2)}</p>
-                    <p className='text-gray-600'>{totalBids > 0 ? `Total Bids: ${totalBids}` : 'Be the first to bid!'}</p>
-                    <Card
-                        className="mt-4 bg-[#F3000D]/[7.84%] p-3 rounded-md flex items-center gap-x-2 text-[13px] text-[#C40006]/[82.75%]"
-                    >
-                        <Info className="w-5 h-5" />
-                        <p className='text-lg'>Auction has been ended.</p>
-                    </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Auction Results</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">Final Bid Amount</p>
+                        <p className="text-3xl font-bold text-gray-900">
+                            ${item.currentPrice.toFixed(2)}
+                        </p>
+                    </div>
+                    <Badge variant="secondary" className="text-lg">
+                        {totalBids} {totalBids === 1 ? 'Bid' : 'Bids'}
+                    </Badge>
                 </div>
-            </div>
-
-            <div className='flex items-center space-x-4 text-xl font-semibold leading-relaxed'>
-                <p>Auction Winner:</p>
-                <p className='text-gray-600'>{item.user?.name}</p>
-            </div>
-            {/* <div>
-                <h3 className='text-xl'>Bidding History</h3>
-                <div className='flex flex-col gap-y-4 mt-4'>
-                    {
-                        bidsData.data.map((bid) => (
-                            <Card key={bid._id} className='flex justify-between items-start p-3'>
-                                <div className=''>
-                                    <p className='text-gray-600 text-xl font-semibold'>{bid.user.name}</p>
-                                    <p className='text-gray-600'>{new Date(bid.timestamp).toLocaleString().split(",")[0]}</p>
-                                    <p className='text-gray-600'>{new Date(bid.timestamp).toLocaleString().split(",")[1]}</p>
-                                </div>
-                                <div>
-                                    <p className='text-gray-600 text-xl font-semibold'>${bid.amount.toFixed(2)}</p>
-                                    <div>
-                                        {
-                                            bid.isAutoBid &&
-                                            <Card
-                                                className='bg-green-200 text-green-700 py-2 rounded-md flex justify-center items-center gap-x-2 text-sm'
-                                            >
-                                                <p>Autobid</p>
-                                            </Card>
-                                        }
-                                    </div>
-                                </div>
-                            </Card>
-                        ))
-                    }
+                <div className="flex items-center space-x-2">
+                    <p className="text-sm font-medium text-gray-500">Auction Winner:</p>
+                    <p className="text-lg font-semibold text-gray-900">{item.user?.name || 'N/A'}</p>
                 </div>
-            </div> */}
+                <Card className="bg-red-50 border-red-200">
+                    <CardContent className="flex items-center space-x-2 py-3">
+                        <Info className="w-5 h-5 text-red-500" />
+                        <p className="text-sm font-medium text-red-800">Auction has ended</p>
+                    </CardContent>
+                </Card>
+            </CardContent>
         </Card>
-    )
-}
+    );
+};
 
-export default AuctionEnded
+export default AuctionEnded;

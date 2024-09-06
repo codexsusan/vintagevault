@@ -2,23 +2,25 @@ import cors from "cors";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import morgan from "morgan";
-import { dbConnection } from "./connection";
-import { PORT } from "./constants";
-import { verifyToken } from "./middleware/auth.middleware";
-import authRoutes from "./routes/auth.routes";
-import itemRoutes from "./routes/item.routes";
-import bidRoutes from "./routes/bid.routes";
-import autoBidRoutes from "./routes/auto-bid.routes";
-import imagesRoutes from "./routes/images.routes";
-import { IRequest } from "./types";
 import cron from "node-cron";
 import PDFDocument from "pdfkit";
+import { dbConnection } from "./connection";
+import { PORT } from "./constants";
+import authRoutes from "./routes/auth.routes";
+import autoBidRoutes from "./routes/auto-bid.routes";
+import bidRoutes from "./routes/bid.routes";
+import imagesRoutes from "./routes/images.routes";
+import itemRoutes from "./routes/item.routes";
+import { IRequest } from "./types";
 
-import "./models/item.model";
-import "./models/bid.model";
-import "./models/auto-bid.model";
 import { checkAuctionsStatus } from "./lib/auction";
+import "./models/auto-bid.model";
+import "./models/bid.model";
+import "./models/item.model";
 import userRoutes from "./routes/user.routes";
+import Item from "./models/item.model";
+import { loadPDFTemplate } from "./utils/pdfTemplateLoader";
+import { handlePDFGenerationAndUpload } from "./utils/invoicePdfGenerator";
 
 const app = express();
 const port = PORT || 3000;
@@ -40,27 +42,39 @@ app.use("/api/bids", bidRoutes);
 app.use("/api/auto-bid", autoBidRoutes);
 app.use("/api/images", imagesRoutes);
 
-app.get("/api/test", verifyToken, (req: IRequest, res) => {
+app.get("/api/test", (req: IRequest, res) => {
   console.log(req.user);
   res.json({ message: "Hello World!" });
 });
 
-app.get("/generate-pdf", (req, res) => {
+app.get("/generate-pdf", async (req, res) => {
   try {
-    const doc = new PDFDocument();
+    const item = await Item.findOne({
+      auctionEndTime: { $lte: new Date() },
+    });
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "attachment; filename=dummy.pdf");
+    const invoiceNumber = Math.floor(Math.random() * 1000000).toString();
 
-    doc.pipe(res);
+    const htmlContent = await loadPDFTemplate("invoiceTemplate", {
+      INVOICE_NUMBER: invoiceNumber,
+      INVOICE_DATE: new Date().toLocaleDateString(),
+      TOTAL_AMOUNT: item?.currentPrice.toString()!,
+      ITEM_NAME: item?.name!,
+      ITEM_AMOUNT: item?.currentPrice.toString()!,
+      TO_NAME: "Susan Khadka",
+    });
 
-    doc.fontSize(25).text("Hello from PDFKit!", { align: "center" });
-    doc.moveDown();
-    doc
-      .fontSize(16)
-      .text("This is a dummy PDF file generated for testing purposes.");
+    const { fileKey, presignedUrl } = await handlePDFGenerationAndUpload(
+      htmlContent,
+      `invoice-${invoiceNumber}.pdf`
+    );
 
-    doc.end();
+    res.json({
+      success: true,
+      message: "PDF generated successfully",
+      fileKey,
+      presignedUrl,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,

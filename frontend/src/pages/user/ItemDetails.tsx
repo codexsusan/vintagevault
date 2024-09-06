@@ -1,58 +1,90 @@
 import AuctionEnded from '@/components/item-details/AuctionEnded';
 import AuctionNotEnded from '@/components/item-details/AuctionNotEnded';
 import BiddingHistoryTable from '@/components/item-details/BiddingHistoryTable';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGetItemDetails } from '@/hooks/itemHooks';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { AlertCircle } from "lucide-react";
 import { useParams } from 'react-router-dom';
 
 function ItemDetails() {
     useDocumentTitle("Item Details");
 
     const { id } = useParams<{ id: string }>();
-    const { data: itemData, isLoading: itemLoading, isError: itemError, refetch } = useGetItemDetails(id!);
+    const { data: itemData, isLoading, isError, refetch } = useGetItemDetails(id!);
 
     const triggerRefetch = () => {
         refetch();
     };
 
-    if (itemLoading) {
-        return <div className="flex justify-center items-center h-screen">Loading...</div>;
-    }
-    console.log({ itemData, itemLoading, itemError });
-    if (itemError || !itemData || !itemData.item) {
-        return <div className="flex justify-center items-center h-screen">Error fetching item details</div>;
+    if (isLoading) {
+        return <ItemDetailsSkeleton />;
     }
 
+    if (isError || !itemData || !itemData.item) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>
+                        There was an error fetching the item details. Please try again later.
+                    </AlertDescription>
+                </Alert>
+            </div>
+        );
+    }
+
+    const { item } = itemData;
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
-            <div className="flex flex-col md:flex-row gap-8">
-                <div className="w-full md:w-1/2 py-10 flex items-center overflow-hidden border-0">
-                    <img src={itemData.item.image} alt={itemData.item.name} className="w-full h-auto" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            <div className="flex flex-col lg:flex-row gap-8">
+                <div className="w-full lg:w-1/2">
+                    <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-auto rounded-lg shadow-lg object-cover aspect-square"
+                    />
                 </div>
-                <div className='py-10 space-y-10 w-full'>
-                    <h2 className='text-3xl font-bold text-gray-700 leading-relaxed'>
-                        {itemData.item.name}
-                    </h2>
-                    {
-                        itemData.item.awarded ?
-                            <AuctionEnded id={id!} itemData={itemData} triggerRefetch={triggerRefetch} /> :
-                            <AuctionNotEnded id={id!} itemData={itemData} triggerRefetch={triggerRefetch} />
-                    }
+                <div className="w-full lg:w-1/2 space-y-6">
+                    <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+                        {item.name}
+                    </h1>
+                    <div className="prose max-w-none">
+                        <h2 className="text-xl font-semibold text-gray-700">Description</h2>
+                        <p className="text-gray-600">{item.description}</p>
+                    </div>
+                    {item.awarded ? (
+                        <AuctionEnded id={id!} itemData={itemData} triggerRefetch={triggerRefetch} />
+                    ) : (
+                        <AuctionNotEnded id={id!} itemData={itemData} triggerRefetch={triggerRefetch} />
+                    )}
                 </div>
             </div>
-            <div className='space-y-2'>
-                <h3 className='text-xl font-semibold'>Description:</h3>
-                <p className=' text-gray-500 text-base font-medium'>
-                    {itemData.item.description}
-                </p>
-            </div>
-            <div>
-                {/* <BiddingHistory id={id!} /> */}
-                <BiddingHistoryTable id={id!} />
-            </div>
+            <BiddingHistoryTable id={id!} />
         </div>
     );
 }
 
-export default ItemDetails
+function ItemDetailsSkeleton() {
+    return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            <div className="flex flex-col lg:flex-row gap-8">
+                <Skeleton className="w-full lg:w-1/2 h-96" />
+                <div className="w-full lg:w-1/2 space-y-6">
+                    <Skeleton className="h-10 w-3/4" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-6 w-1/4" />
+                        <Skeleton className="h-20 w-full" />
+                    </div>
+                    <Skeleton className="h-64 w-full" />
+                </div>
+            </div>
+            <Skeleton className="h-64 w-full" />
+        </div>
+    );
+}
+
+export default ItemDetails;

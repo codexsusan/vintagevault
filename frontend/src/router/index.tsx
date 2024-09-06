@@ -4,13 +4,13 @@ import AddItem from "@/pages/admin/AddItem";
 import Dashboard from "@/pages/admin/Dashboard";
 import UpdateItem from "@/pages/admin/UpdateItem";
 import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
 import NotFound from "@/pages/NotFound";
 import Home from "@/pages/user/Home";
 import ItemDetails from "@/pages/user/ItemDetails";
+import ProfilePage from "@/pages/user/ProfilePage";
 import { createBrowserRouter } from "react-router-dom";
 import InitialRoute from "./InitialRoute";
-import Register from "@/pages/auth/Register";
-import Profile from "@/pages/user/Profile";
 
 const router = createBrowserRouter([
     {
@@ -31,7 +31,7 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "/profile",
-                element: <Profile />
+                element: <ProfilePage />
             },
             {
                 path: "/home",

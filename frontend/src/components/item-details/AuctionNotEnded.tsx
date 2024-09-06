@@ -117,7 +117,7 @@ const AuctionNotEnded = ({
                 </div>
                 <div className=''>
                     <p>Time Left:</p>
-                    <CountDown classname='text-gray-600 text-xl font-semibold' endTime={new Date(item.auctionEndTime)} />
+                    <CountDown className='text-gray-600 text-xl font-semibold' endTime={new Date(item.auctionEndTime)} />
                 </div>
             </div>
             <Form {...bidForm}>

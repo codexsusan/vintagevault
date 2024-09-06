@@ -105,6 +105,7 @@ export const createItem = async (req: IRequest, res: Response) => {
 // Get a single item
 export const getItemById = async (req: IRequest, res: Response) => {
   const itemId = req.params.id;
+  const currentUserId = req.user!.userId;
   try {
     const item = await Item.findById(itemId).select("-__v");
     if (!item) {
@@ -125,14 +126,12 @@ export const getItemById = async (req: IRequest, res: Response) => {
       const highestBid = await Bid.findById(item.highestBid);
       const highestBidder = await getUserById(highestBid!.userId);
 
-      // const userProfilePresignedUrl = await getPresignedUrl(highestBidder!.profilePicture);
       const finalItemData = {
         ...itemWithPresignedUrl,
         user: {
           _id: highestBidder!._id,
-          // email: highestBidder!.email,
           name: highestBidder!.name,
-          // profilePicture: userProfilePresignedUrl,
+          isWinner: highestBid!.userId === currentUserId,
         },
       };
       console.log(finalItemData);
@@ -143,7 +142,6 @@ export const getItemById = async (req: IRequest, res: Response) => {
       });
     }
 
-    // console.log(itemWithPresignedUrl);
     res.json({
       success: true,
       message: "Item fetched successfully",

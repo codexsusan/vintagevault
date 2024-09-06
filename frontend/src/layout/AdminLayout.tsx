@@ -1,8 +1,17 @@
 import Navbar from "@/components/common/Navbar";
 import ProtectedRoute from "@/router/ProtectedRoute";
-import { Outlet } from "react-router-dom";
+import { getUserRole, USER } from "@/utils/storage";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
 
 function AdminLayout() {
+
+    const currentUserRole = getUserRole();
+    const navigate = useNavigate();
+
+    if (currentUserRole === USER) {
+        navigate("/home");
+        return <Navigate to="/home" replace />
+    }
     return (
         <ProtectedRoute>
             <div className="h-full font-inter">

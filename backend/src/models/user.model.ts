@@ -1,12 +1,12 @@
 import mongoose, { Model, model, Schema } from "mongoose";
 
-
 export interface IUser extends Document {
   _id: string;
   email: string;
   profilePicture: string;
   name: string;
   userType: string;
+  bio: string;
   isVerified: boolean;
   password: string;
 }
@@ -19,8 +19,6 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
   },
   profilePicture: {
     type: String,
-    // required: true,
-    // default: DEFAULT_PROFILE,
   },
   name: {
     type: String,
@@ -29,6 +27,11 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
   userType: {
     type: String,
     required: true,
+  },
+  bio: {
+    type: String,
+    required: false,
+    default: "",
   },
   isVerified: {
     type: Boolean,
@@ -43,5 +46,3 @@ const userSchema: Schema<IUser> = new Schema<IUser>({
 
 const User: Model<IUser> = model("User", userSchema);
 export default User;
-
-

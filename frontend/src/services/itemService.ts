@@ -130,7 +130,6 @@ class ItemService {
       const response = await apiService.get<GetItemDetailsResponse>(
         `items/${id}`
       );
-      console.log(response);
       const validatedData = GetItemDetailsResponseSchema.parse(response);
       return validatedData;
     } catch (error) {

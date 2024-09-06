@@ -1,6 +1,4 @@
-import mongoose, { model, Schema } from "mongoose";
-import { IUser } from "./user.model";
-import { IBid } from "./bid.model";
+import { model, Schema } from "mongoose";
 
 export interface IItem extends Document {
   _id: string;

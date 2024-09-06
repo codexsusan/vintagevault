@@ -4,6 +4,7 @@ import Bid, { IBid } from "../models/bid.model";
 import Item from "../models/item.model";
 import User from "../models/user.model";
 import { IRequest } from "../types";
+import { UpdateUserSchema } from "../schemas/user.schema";
 
 export const updateProfilePicture = async (req: IRequest, res: Response) => {
   const { profilePicture } = req.body;
@@ -25,6 +26,65 @@ export const updateProfilePicture = async (req: IRequest, res: Response) => {
   }
 };
 
+export const getUser = async (req: IRequest, res: Response) => {
+  const userId = req.user!.userId;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "User fetched successfully",
+      data: {
+        _id: user._id,
+        email: user.email,
+        bio: user.bio,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Error fetching user",
+      error: (error as Error).message,
+    });
+  }
+};
+
+export const updateUser = async (req: IRequest, res: Response) => {
+  const userId = req.user!.userId;
+  try {
+    const validatedData = UpdateUserSchema.safeParse(req.body);
+    if (!validatedData.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid data",
+        error: validatedData.error.issues,
+      });
+    }
+
+    const { name, email, bio } = validatedData.data;
+
+    await User.updateOne({ _id: userId }, { name, email, bio });
+
+    res.json({
+      success: true,
+      message: "User updated successfully",
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Error updating user",
+      error: (error as Error).message,
+    });
+  }
+};
+
 export const getUserBiddingHistory = async (req: IRequest, res: Response) => {
   const userId = req.user!.userId;
   const { status } = req.query;
@@ -40,7 +100,7 @@ export const getUserBiddingHistory = async (req: IRequest, res: Response) => {
       bidsByItemId[bid.itemId].push(bid);
     });
 
-    //  Fetcihng item details for each items 
+    //  Fetcihng item details for each items
     const biddingHistoryWithItems = await Promise.all(
       Object.keys(bidsByItemId).map(async (itemId) => {
         const item = await Item.findById(itemId);
@@ -98,7 +158,6 @@ export const getUserBiddingHistory = async (req: IRequest, res: Response) => {
       message: "User bidding history fetched successfully",
       data: filteredBiddingHistory,
     });
-    
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -107,4 +166,3 @@ export const getUserBiddingHistory = async (req: IRequest, res: Response) => {
     });
   }
 };
-

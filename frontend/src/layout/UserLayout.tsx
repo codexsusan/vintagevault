@@ -1,9 +1,19 @@
 
-import Navbar from '@/components/common/Navbar'
-import ProtectedRoute from '@/router/ProtectedRoute'
-import { Outlet } from 'react-router-dom'
+import Navbar from '@/components/common/Navbar';
+import ProtectedRoute from '@/router/ProtectedRoute';
+import { ADMIN, getUserRole } from '@/utils/storage';
+import { Navigate, Outlet } from 'react-router-dom';
 
 function UserLayout() {
+
+    const currentUserRole = getUserRole();
+
+
+    console.log({ currentUserRole });
+
+    if (currentUserRole === ADMIN) {
+        return <Navigate to="/admin/dashboard" replace />
+    }
     return (
         <ProtectedRoute>
             <div className="h-full font-inter">
