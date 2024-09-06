@@ -15,7 +15,10 @@ const generatePDF = async (
 
   try {
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-    await page.pdf({ path: outputFilePath, format: "A4" });
+    await page.pdf({
+      path: outputFilePath,
+      format: "A4",
+    });
   } finally {
     await browser.close();
   }
@@ -55,7 +58,7 @@ export const handlePDFGenerationAndUpload = async (
     await fs.unlink(outputFilePath);
 
     // 4. Generate a pre-signed URL for accessing the uploaded PDF
-    const presignedUrl = await getPresignedUrl(s3Key);
+    const presignedUrl = await getPresignedUrl(s3Key, 3600 * 24 * 5); // 5 days
 
     // 5. Return both the file key and the pre-signed URL
     return { fileKey: s3Key, presignedUrl };

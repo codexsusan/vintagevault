@@ -4,6 +4,7 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosResponse,
   AxiosError,
+  ResponseType,
 } from "axios";
 
 const API_BASE_URL = "http://localhost:3500/api"; // Adjust this to your backend URL
@@ -49,7 +50,7 @@ class ApiService {
           // This is an invalid credentials error, throw a specific error
           throw new ApiError(401, "Invalid credentials");
         } else {
-          // This is an unauthorized access error, handle as before
+          // This is an unauthorized access error
           removeAuthToken();
           window.location.href = "/auth/login";
         }
@@ -58,34 +59,53 @@ class ApiService {
     return Promise.reject(error);
   };
 
+  public async request<T>(
+    method: "get" | "post" | "put" | "delete",
+    url: string,
+    config?: {
+      params?: Record<string, unknown>;
+      data?: unknown;
+      responseType?: ResponseType;
+    }
+  ): Promise<T> {
+    return this.api.request({
+      method,
+      url,
+      ...config,
+    });
+  }
+
   public async get<T>(
     url: string,
-    config?: { params?: Record<string, unknown> }
+    config?: {
+      params?: Record<string, unknown>;
+      responseType?: ResponseType;
+    }
   ): Promise<T> {
-    return this.api.get(url, config);
+    return this.request("get", url, config);
   }
 
   public async post<T>(
     url: string,
     data?: unknown,
-    config?: Record<string, unknown>
+    config?: { responseType?: ResponseType }
   ): Promise<T> {
-    return this.api.post(url, data, config);
+    return this.request("post", url, { ...config, data });
   }
 
   public async put<T>(
     url: string,
     data?: unknown,
-    config?: Record<string, unknown>
+    config?: { responseType?: ResponseType }
   ): Promise<T> {
-    return this.api.put(url, data, config);
+    return this.request("put", url, { ...config, data });
   }
 
   public async delete<T>(
     url: string,
-    config?: Record<string, unknown>
+    config?: { responseType?: ResponseType }
   ): Promise<T> {
-    return this.api.delete(url, config);
+    return this.request("delete", url, config);
   }
 }
 

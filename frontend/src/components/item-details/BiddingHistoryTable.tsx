@@ -75,7 +75,7 @@ const BiddingHistoryTable = ({ id }: { id: string }) => {
                                 <TableHead className="w-1/5">
                                     <div className="flex items-center space-x-2">
                                         <Bot className="h-4 w-4" />
-                                        <span>Auto Bid</span>
+                                        <span>Bid Type</span>
                                     </div>
                                 </TableHead>
                                 <TableHead className="w-1/5 text-right">

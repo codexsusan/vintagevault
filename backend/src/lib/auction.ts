@@ -2,6 +2,7 @@ import { getUserById } from "../data/user";
 import Bid from "../models/bid.model";
 import Invoice from "../models/invoice.model";
 import Item from "../models/item.model";
+import { handlePDFGenerationAndUpload } from "../utils/invoicePdfGenerator";
 import { loadPDFTemplate } from "../utils/pdfTemplateLoader";
 
 export async function checkAuctionsStatus() {
@@ -13,6 +14,8 @@ export async function checkAuctionsStatus() {
     auctionEndTime: { $lte: now },
     awarded: false,
   });
+
+  console.log(endedAuctions);
 
   endedAuctions.forEach(async (item) => {
     const highestBidder = await Bid.findById(item.highestBid);
@@ -39,15 +42,22 @@ export async function checkAuctionsStatus() {
 
     // TODO: Generate PDF for the winner
 
+    const { fileKey, presignedUrl } = await handlePDFGenerationAndUpload(
+      htmlContent,
+      `invoice-${invoice._id}.pdf`
+    );
+
+    console.log({ fileKey, presignedUrl });
+
+    await Invoice.updateOne({ _id: invoice._id }, { invoiceKey: fileKey });
+
     // TODO: Release funds for all bidders except the winner
-    // TODO: Update item status (can't remember the whole idea behind this)
-    // ???? item.status = "closed";  Unsure about this
-    // ???? await item.save();
+
     sendEmailToWinner(highestBidder!.userId, item._id);
     console.log(`Auction ${item._id} has ended and awarded`);
     // TODO: Notify winner and other bidders
     // TODO: End auction
-    // TODO: Use socket to notify all bidders viewing th items details page
+    // TODO: Use socket to notify all bidders viewing the items details page
   });
 }
 

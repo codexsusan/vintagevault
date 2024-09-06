@@ -57,7 +57,6 @@ export const setAutoBidConfig = async (req: IRequest, res: Response) => {
 export const getAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    // console.log(userId);
     const config = await AutoBidConfig.findOne({ userId });
     if (!config) {
       return res
@@ -176,6 +175,7 @@ export const processAutoBids = async (
 
             item.currentPrice = newBidAmount;
             item.bids.push(newBid._id);
+            item.highestBid = newBid._id;
             await item.save({ session });
 
             config.updateAllocatedAmount(itemId, newBidAmount);

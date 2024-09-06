@@ -32,7 +32,7 @@ const invoiceModel = new Schema({
   },
   invoiceKey: {
     type: String,
-    required: true,
+    default: "",
   },
   timestamp: {
     type: Date,

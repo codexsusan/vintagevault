@@ -1,7 +1,17 @@
-import { GetItemDetailsResponse } from '@/services/itemService';
-import { Info } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useDownloadInvoice, useGetItemInvoice } from '@/hooks/invoiceHooks';
+import { GetItemDetailsResponse } from '@/services/itemService';
+import { Download, Info, ReceiptText } from 'lucide-react';
+import { Button } from '../ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 const AuctionEnded = ({
     itemData,
@@ -12,6 +22,16 @@ const AuctionEnded = ({
 }) => {
     const { item } = itemData;
     const totalBids = item.bids.length;
+    const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+
+    const { data: invoice, isError } = useGetItemInvoice(itemData.item._id, item.user?.isWinner ?? false);
+    const { mutate: downloadInvoice, isPending: isDownloading } = useDownloadInvoice();
+
+    const handleDownloadInvoice = () => {
+        if (invoice && invoice.data) {
+            downloadInvoice(invoice.data._id);
+        }
+    };
 
     return (
         <Card>
@@ -40,6 +60,41 @@ const AuctionEnded = ({
                         <p className="text-sm font-medium text-red-800">Auction has ended</p>
                     </CardContent>
                 </Card>
+                {!isError && invoice && invoice.data && (
+                    <div className='flex gap-x-4'>
+                        <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="flex gap-x-3">
+                                    <ReceiptText className="w-5 h-5" />
+                                    <p>View Invoice</p>
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>Invoice</DialogTitle>
+                                </DialogHeader>
+                                <div className="mt-4">
+                                    <iframe
+                                        src={invoice.data.invoiceUrl}
+                                        title="Invoice"
+                                        width="100%"
+                                        height="600px"
+                                        className="border-0"
+                                    />
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                        <Button
+                            variant="default"
+                            className="flex gap-x-3"
+                            onClick={handleDownloadInvoice}
+                            disabled={isDownloading}
+                        >
+                            <Download className='w-5 h-5' />
+                            <p>{isDownloading ? 'Downloading...' : 'Download Invoice'}</p>
+                        </Button>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

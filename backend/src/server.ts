@@ -3,7 +3,6 @@ import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import morgan from "morgan";
 import cron from "node-cron";
-import PDFDocument from "pdfkit";
 import { dbConnection } from "./connection";
 import { PORT } from "./constants";
 import authRoutes from "./routes/auth.routes";
@@ -17,10 +16,11 @@ import { checkAuctionsStatus } from "./lib/auction";
 import "./models/auto-bid.model";
 import "./models/bid.model";
 import "./models/item.model";
-import userRoutes from "./routes/user.routes";
 import Item from "./models/item.model";
-import { loadPDFTemplate } from "./utils/pdfTemplateLoader";
+import invoiceRoutes from "./routes/invoice.routes";
+import userRoutes from "./routes/user.routes";
 import { handlePDFGenerationAndUpload } from "./utils/invoicePdfGenerator";
+import { loadPDFTemplate } from "./utils/pdfTemplateLoader";
 
 const app = express();
 const port = PORT || 3000;
@@ -41,6 +41,7 @@ app.use("/api/items", itemRoutes);
 app.use("/api/bids", bidRoutes);
 app.use("/api/auto-bid", autoBidRoutes);
 app.use("/api/images", imagesRoutes);
+app.use("/api/invoices", invoiceRoutes);
 
 app.get("/api/test", (req: IRequest, res) => {
   console.log(req.user);

@@ -36,7 +36,6 @@ const BiddingHistory = ({ id }: { id: string }) => {
                                         </Card>
                                     }
                                 </div>
-                                {/* <p className='text-gray-600'>{bid.isAutoBid ? "Auto Bid" : ""}</p> */}
                             </div>
                         </Card>
                     ))

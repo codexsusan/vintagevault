@@ -44,6 +44,7 @@ const GetItemDetailsResponseSchema = z.object({
       .object({
         _id: z.string(),
         name: z.string(),
+        isWinner: z.boolean(),
       })
       .optional(),
   }),

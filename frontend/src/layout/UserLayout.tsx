@@ -1,5 +1,6 @@
 
 import Navbar from '@/components/common/Navbar';
+import { ConfettiProvider } from '@/providers/confetti-provider';
 import ProtectedRoute from '@/router/ProtectedRoute';
 import { ADMIN, getUserRole } from '@/utils/storage';
 import { Navigate, Outlet } from 'react-router-dom';
@@ -21,7 +22,9 @@ function UserLayout() {
                     <Navbar />
                 </div>
                 <main className=" pt-[75px] h-full">
-                    <Outlet />
+                    <ConfettiProvider>
+                        <Outlet />
+                    </ConfettiProvider>
                 </main>
             </div>
         </ProtectedRoute>

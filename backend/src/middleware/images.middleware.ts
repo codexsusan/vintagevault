@@ -41,14 +41,14 @@ const upload = multer({
   }),
 });
 
-export const getPresignedUrl = async (key: string) => {
+export const getPresignedUrl = async (key: string, expiresIn = 3600) => {
   const command = new GetObjectCommand({
     Bucket: BUCKET_BUCKET_NAME,
     Key: key,
   });
 
   const url: string = await getSignedUrl(s3, command, {
-    expiresIn: 3600,
+    expiresIn: expiresIn,
   });
 
   return url;

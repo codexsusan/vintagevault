@@ -19,14 +19,7 @@ export const getAllItems = async (req: IRequest, res: Response) => {
     const sortBy = req.query.sortBy as string;
     const sortOrder = req.query.sortOrder as SortOrder;
 
-    // Check if the user is an admin
-    // const isAdmin = req.user?.role === "admin";
-
     let query = Item.find();
-
-    //  if (!isAdmin) {
-    //    query = query.where("auctionEndTime").gt(new Date() as any);
-    //  }
 
     if (search) {
       query = query.or([
@@ -49,8 +42,6 @@ export const getAllItems = async (req: IRequest, res: Response) => {
         return { ...item.toObject(), image: presignedUrl };
       })
     );
-
-    // console.log(itemsWithPresignedUrl);
 
     res.json({
       success: true,
@@ -134,7 +125,6 @@ export const getItemById = async (req: IRequest, res: Response) => {
           isWinner: highestBid!.userId === currentUserId,
         },
       };
-      console.log(finalItemData);
       return res.json({
         success: true,
         message: "Item fetched successfully",

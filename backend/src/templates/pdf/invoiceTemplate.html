@@ -5,48 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoice</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
         font-family: Arial, sans-serif;
         margin: 0;
         padding: 0;
         color: #333;
+        background-color: #f8f8f8;
       }
       .container {
-        width: 80%;
+        width: 100%;
+        max-width: 800px;
         margin: 0 auto;
-        padding: 20px;
-        border: 1px solid #ddd;
+        padding: 40px;
+        background-color: #ffffff;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
       .header {
         text-align: center;
         margin-bottom: 40px;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 20px;
       }
       .header h1 {
         margin: 0;
-        font-size: 24px;
+        font-size: 32px;
+        color: #2c3e50;
       }
       .header p {
         margin: 5px 0;
-        font-size: 14px;
+        font-size: 16px;
       }
       .invoice-details {
+        display: flex;
+        justify-content: space-between;
         margin-bottom: 40px;
       }
-      .invoice-details .from,
-      .invoice-details .to {
-        width: 50%;
-        float: left;
-        padding: 10px;
+      .invoice-details .from {
+        width: 45%;
       }
-      .clearfix {
-        clear: both;
+      .invoice-details .to {
+        width: 45%;
+        text-align: right;
       }
       .invoice-info {
         margin: 20px 0;
-      }
-      .invoice-info p {
-        margin: 5px 0;
       }
       .table {
         width: 100%;
@@ -55,21 +60,29 @@
       }
       .table th,
       .table td {
-        border: 1px solid #ddd;
-        padding: 10px;
+        border: 1px solid #e0e0e0;
+        padding: 12px;
         text-align: left;
       }
       .table th {
         background-color: #f5f5f5;
+        font-weight: bold;
+        color: #2c3e50;
       }
       .total {
         text-align: right;
         margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c3e50;
       }
       .remit-to {
         margin-top: 40px;
         font-size: 14px;
         text-align: center;
+        color: #7f8c8d;
+        border-top: 2px solid #f0f0f0;
+        padding-top: 20px;
       }
     </style>
   </head>
@@ -81,7 +94,7 @@
         <p><strong>Date: </strong>::INVOICE_DATE::</p>
       </div>
 
-      <div class="invoice-details clearfix">
+      <div class="invoice-details">
         <div class="from">
           <h2>From:</h2>
           <p>Vintage Vault</p>
@@ -104,12 +117,12 @@
         <tbody>
           <tr>
             <td>::ITEM_NAME::</td>
-            <td>::ITEM_AMOUNT::</td>
+            <td>$ ::ITEM_AMOUNT::</td>
           </tr>
         </tbody>
       </table>
       <div class="total">
-        <p><strong>Total Amount: </strong>::TOTAL_AMOUNT::</p>
+        <p>Total Amount: $  ::TOTAL_AMOUNT::</p>
       </div>
 
       <div class="remit-to">

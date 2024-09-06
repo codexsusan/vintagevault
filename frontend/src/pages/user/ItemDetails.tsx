@@ -4,15 +4,30 @@ import BiddingHistoryTable from '@/components/item-details/BiddingHistoryTable';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetItemDetails } from '@/hooks/itemHooks';
+import { useConfetti } from '@/hooks/useConfetti';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { AlertCircle } from "lucide-react";
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 function ItemDetails() {
     useDocumentTitle("Item Details");
+    const confetti = useConfetti();
 
     const { id } = useParams<{ id: string }>();
     const { data: itemData, isLoading, isError, refetch } = useGetItemDetails(id!);
+
+
+    useEffect(() => {
+        // TODO: Might implement (P5)
+        if (itemData?.item?.awarded && itemData?.item?.user?.isWinner) {
+            confetti.onOpen();
+        }
+
+        setTimeout(() => {
+            confetti.onClose();
+        }, 10000);
+    }, [itemData?.item?.awarded, itemData?.item?.user?.isWinner]);
 
     const triggerRefetch = () => {
         refetch();
@@ -36,7 +51,9 @@ function ItemDetails() {
         );
     }
 
+
     const { item } = itemData;
+
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
