@@ -9,6 +9,7 @@ import { startSession } from "mongoose";
 // import { getUserById } from "./auth.controller";
 import { sendMail } from "../mail";
 import { getUserById } from "../data/user";
+import { updateBidViaSocket } from "../socket/bid";
 
 export const setAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
@@ -19,6 +20,7 @@ export const setAutoBidConfig = async (req: IRequest, res: Response) => {
     if (config) {
       config.maxBidAmount = validatedConfig.maxBidAmount;
       config.bidAlertPercentage = validatedConfig.bidAlertPercentage;
+      config.status = "active";
 
       // Adjust active bids if necessary
       const totalAllocated = config.getTotalAllocatedAmount();
@@ -91,6 +93,7 @@ export const toggleAutoBid = async (req: IRequest, res: Response) => {
     const { itemId } = req.params;
     const userId = req.user!.userId;
     const config = await AutoBidConfig.findOne({ userId });
+    const item = await Item.findById(itemId);
 
     if (!config) {
       return res
@@ -98,24 +101,38 @@ export const toggleAutoBid = async (req: IRequest, res: Response) => {
         .json({ message: "Auto-bid configuration not found" });
     }
 
-    const existingBidIndex = config.activeBids.findIndex(
-      (bid) => bid.itemId === itemId
-    );
-    if (existingBidIndex > -1) {
-      // Remove the item from auto-bidding
-      config.activeBids.splice(existingBidIndex, 1);
-      await config.save();
-      res.json({
-        success: true,
-        message: "Removed item from auto-bidding.",
-      });
+    if (config.canPlaceAutoBid(itemId, item?.currentPrice! + 1)) {
+      const existingBidIndex = config.activeBids.findIndex(
+        (bid) => bid.itemId === itemId
+      );
+      if (existingBidIndex > -1) {
+        // Remove the item from auto-bidding
+        config.activeBids.splice(existingBidIndex, 1);
+        await config.save();
+        res.json({
+          success: true,
+          message: "Removed item from auto-bidding.",
+        });
+      } else {
+        const item = await Item.findById(itemId);
+        if (item?.currentPrice! > config.maxBidAmount) {
+          return res.status(400).json({
+            success: false,
+            message: "Please increase your max amount for auto-bidding",
+          });
+        }
+        // Add the item for auto-bidding
+        config.activeBids.push({ itemId, allocatedAmount: 0 });
+        await config.save();
+        res.json({
+          success: true,
+          message: "Added item for auto-bidding.",
+        });
+      }
     } else {
-      // Add the item for auto-bidding
-      config.activeBids.push({ itemId, allocatedAmount: 0 });
-      await config.save();
-      res.json({
-        success: true,
-        message: "Added item for auto-bidding.",
+      return res.status(400).json({
+        success: false,
+        message: "Please increase your max amount for auto-bidding",
       });
     }
   } catch (error) {
@@ -177,6 +194,25 @@ export const processAutoBids = async (
             item.bids.push(newBid._id);
             item.highestBid = newBid._id;
             await item.save({ session });
+
+            const user = await getUserById(config.userId);
+            
+            updateBidViaSocket({
+              itemId: item._id.toString(),
+              highestBidder: excludeUserId!,
+              bidCount: item.bids.length,
+              currentPrice: item.currentPrice,
+              bid: {
+                _id: newBid._id,
+                user: {
+                  _id: user?.id,
+                  name: user?.name!,
+                },
+                timestamp: newBid.timestamp,
+                isAutoBid: newBid.isAutoBid,
+                amount: newBid.amount,
+              },
+            });
 
             config.updateAllocatedAmount(itemId, newBidAmount);
 

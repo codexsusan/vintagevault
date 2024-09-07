@@ -1,4 +1,5 @@
 import { getUserById } from "../data/user";
+import AutoBidConfig from "../models/auto-bid.model";
 import Bid from "../models/bid.model";
 import Invoice from "../models/invoice.model";
 import Item from "../models/item.model";
@@ -15,13 +16,11 @@ export async function checkAuctionsStatus() {
     awarded: false,
   });
 
-  console.log(endedAuctions);
-
   endedAuctions.forEach(async (item) => {
     const highestBidder = await Bid.findById(item.highestBid);
     await Item.updateOne({ _id: item._id }, { $set: { awarded: true } });
 
-    // TODO: Store invoice for the winner
+    // Create invoice for the winner
     const invoice = await Invoice.create({
       itemId: item._id,
       userId: highestBidder!.userId,
@@ -53,6 +52,39 @@ export async function checkAuctionsStatus() {
 
     // TODO: Release funds for all bidders except the winner
 
+    const autoBidConfigs = await AutoBidConfig.find({
+      "activeBids.itemId": item._id,
+      userId: { $ne: highestBidder!.userId },
+    });
+
+    for (const config of autoBidConfigs) {
+      const itemBid = config.activeBids.find(
+        (bid) => bid.itemId === item._id.toString()
+      );
+
+      if (itemBid) {
+        config.activeBids = config.activeBids.filter(
+          (bid) => bid.itemId !== item._id.toString()
+        );
+        await config.save();
+
+        // TODO: Notify user about the released funds as auction has ended
+        console.log(`Auto-bidding released funds for user ${config.userId}`);
+        const autoBidUser = await getUserById(config.userId);
+        // await sendMail(
+        //   autoBidUser!.email,
+        //   "Auto-Bid Funds Released",
+        //   "autoBidFundsReleased",
+        //   {
+        //     USERNAME: autoBidUser?.name!,
+        //     COMPANY_NAME: "Vintage Vault",
+        //     ITEM_NAME: item.name,
+        //     RELEASED_AMOUNT: itemBid.allocatedAmount.toString(),
+        //   }
+        // );
+      }
+    }
+
     sendEmailToWinner(highestBidder!.userId, item._id);
     console.log(`Auction ${item._id} has ended and awarded`);
     // TODO: Notify winner and other bidders
@@ -65,3 +97,15 @@ function sendEmailToWinner(userId: string, auction: string) {
   // TODO: Trigger email to winner
   console.log(`Email sent to user ${userId} for winning auction ${auction}`);
 }
+
+// Function to release all funds for all bidders except the winner
+const releaseAllAutoBidFunds = async (winnerId: string, itemId: string) => {
+  const autoBidConfigs = await AutoBidConfig.find({
+    "activeBids.itemId": itemId,
+    userId: { $ne: winnerId },
+    status: "active",
+  }).sort({ createdAt: 1 });
+
+  for (const config of autoBidConfigs) {
+  }
+};

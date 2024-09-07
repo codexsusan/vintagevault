@@ -5,9 +5,10 @@ import { cn } from '@/lib/utils';
 interface CountdownTimerProps {
     endTime: Date;
     className?: string;
+    onComplete?: () => void; // Optional callback for when countdown ends
 }
 
-const CountDown = ({ endTime, className }: CountdownTimerProps) => {
+const CountDown = ({ endTime, className, onComplete }: CountdownTimerProps) => {
     const [timeRemaining, setTimeRemaining] = useState<string>('');
     const [isEnded, setIsEnded] = useState<boolean>(false);
 
@@ -26,6 +27,9 @@ const CountDown = ({ endTime, className }: CountdownTimerProps) => {
         if (distance < 0) {
             setTimeRemaining('Ended');
             setIsEnded(true);
+            if (onComplete) {
+                onComplete(); // Trigger the action if `onComplete` is provided
+            }
             return;
         }
 

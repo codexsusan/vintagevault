@@ -5,6 +5,7 @@ import Item from "../models/item.model";
 import User from "../models/user.model";
 import { IRequest } from "../types";
 import { UpdateUserSchema } from "../schemas/user.schema";
+import Invoice from "../models/invoice.model";
 
 export const updateProfilePicture = async (req: IRequest, res: Response) => {
   const { profilePicture } = req.body;
@@ -87,7 +88,8 @@ export const updateUser = async (req: IRequest, res: Response) => {
 
 export const getUserBiddingHistory = async (req: IRequest, res: Response) => {
   const userId = req.user!.userId;
-  const { status } = req.query;
+  const { status } = req.query; // The status filter from query params
+
   try {
     const biddingHistory = await Bid.find({ userId }).sort({ timestamp: -1 });
 
@@ -100,35 +102,20 @@ export const getUserBiddingHistory = async (req: IRequest, res: Response) => {
       bidsByItemId[bid.itemId].push(bid);
     });
 
-    //  Fetcihng item details for each items
+    // Fetching item details for each item
     const biddingHistoryWithItems = await Promise.all(
       Object.keys(bidsByItemId).map(async (itemId) => {
         const item = await Item.findById(itemId);
         if (!item) {
-          return null; // TODO: Need to check for this don't forget to handle it
+          return null;
         }
 
-        // Fetch the highest bid for the item to determine the bid status
+        let itemStatus: BiddingHistoryResponse["status"] = "in-progress"; // Default status
         const highestBid = await Bid.findById(item.highestBid);
-        let itemStatus = "in-progress";
-        if (item.awarded) {
-          if (highestBid?.userId === userId) {
-            itemStatus = "won";
-            // TODO: If user won then bill also should be generated.
-          } else {
-            itemStatus = "lost";
-          }
-        }
-
-        // If a status filter is provided, check if the item matches the filter
-        if (status && status !== itemStatus) {
-          return null; // Skip this item as it doesn't match the status filter
-        }
-
         const presignedUrl = await getPresignedUrl(item.image);
 
-        // Return the item data with the user's bids for this item
-        return {
+        // Base result object
+        const result = {
           _id: item._id,
           name: item.name,
           description: item.description,
@@ -138,6 +125,7 @@ export const getUserBiddingHistory = async (req: IRequest, res: Response) => {
           image: presignedUrl,
           awarded: item.awarded,
           status: itemStatus,
+          invoice: null,
           bids: bidsByItemId[itemId].map((bid) => ({
             _id: bid._id,
             amount: bid.amount,
@@ -145,10 +133,49 @@ export const getUserBiddingHistory = async (req: IRequest, res: Response) => {
             isAutoBid: bid.isAutoBid,
           })),
         };
+
+        let finalResult: BiddingHistoryResponse = result;
+
+        // Check if the item is awarded and determine the status
+        if (item.awarded) {
+          if (highestBid?.userId === userId) {
+            // User has won this item
+            itemStatus = "won" as BiddingHistoryResponse['status'];
+            const invoice = await Invoice.findOne({
+              itemId: item._id,
+              userId,
+            });
+            const invoiceUrl = await getPresignedUrl(
+              invoice?.invoiceKey!,
+              3600
+            );
+            finalResult = {
+              ...result,
+              status: itemStatus,
+              invoice: {
+                _id: invoice?._id!,
+                url: invoiceUrl,
+              },
+            };
+          } else {
+            itemStatus = "lost";
+            finalResult = {
+              ...result,
+              status: itemStatus,
+            };
+          }
+        }
+
+        // Apply status filter
+        if (status && status !== itemStatus) {
+          return null; // Skip this item if it doesn't match the filter
+        }
+
+        return finalResult;
       })
     );
 
-    // Filter out any null items (if an item was not found or if the item doesn't match the status filter)
+    // Filter out null values (items that didn't match the status filter)
     const filteredBiddingHistory = biddingHistoryWithItems.filter(
       (item) => item !== null
     );
@@ -165,4 +192,26 @@ export const getUserBiddingHistory = async (req: IRequest, res: Response) => {
       error: (error as Error).message,
     });
   }
+};
+
+type BiddingHistoryResponse = {
+  _id: string;
+  name: string;
+  description: string;
+  startingPrice: number;
+  currentPrice: number;
+  auctionEndTime: Date;
+  image: string;
+  awarded: boolean;
+  status: "in-progress" | "won" | "lost";
+  invoice: {
+    _id: string;
+    url: string;
+  } | null;
+  bids: {
+    _id: string;
+    amount: number;
+    timestamp: Date;
+    isAutoBid: boolean;
+  }[];
 };

@@ -6,9 +6,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useGetItemDetails } from '@/hooks/itemHooks';
 import { useConfetti } from '@/hooks/useConfetti';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useRealtimeItemUpdates } from '@/hooks/useRTItemUpdate';
 import { AlertCircle } from "lucide-react";
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+
 
 function ItemDetails() {
     useDocumentTitle("Item Details");
@@ -17,6 +19,7 @@ function ItemDetails() {
     const { id } = useParams<{ id: string }>();
     const { data: itemData, isLoading, isError, refetch } = useGetItemDetails(id!);
 
+    useRealtimeItemUpdates(id!);
 
     useEffect(() => {
         // TODO: Might implement (P5)

@@ -1,5 +1,5 @@
 import { UpdateUserFormSchemaType } from "@/components/profile-page/PersonalDetails";
-import { userService } from "@/services/userService";
+import { UserBiddingHistoryQueryParams, userService } from "@/services/userService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const useGetMe = () => {
@@ -20,11 +20,11 @@ export const useUpdateUser = () => {
   });
 };
 
-export const useGetUserBiddingHistory = () => {
+export const useGetUserBiddingHistory = (data: UserBiddingHistoryQueryParams) => {
   return useQuery({
     queryKey: ["getUserBiddingHistory"],
     queryFn: async () => {
-      return await userService.getUserBiddingHistory();
+      return await userService.getUserBiddingHistory(data);
     },
   });
 };

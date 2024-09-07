@@ -11,7 +11,8 @@ import bidRoutes from "./routes/bid.routes";
 import imagesRoutes from "./routes/images.routes";
 import itemRoutes from "./routes/item.routes";
 import { IRequest } from "./types";
-
+import { createServer } from "http"; // Import the HTTP server
+import { Server } from "socket.io"; // Import Socket.IO
 import { checkAuctionsStatus } from "./lib/auction";
 import "./models/auto-bid.model";
 import "./models/bid.model";
@@ -21,8 +22,14 @@ import invoiceRoutes from "./routes/invoice.routes";
 import userRoutes from "./routes/user.routes";
 import { handlePDFGenerationAndUpload } from "./utils/invoicePdfGenerator";
 import { loadPDFTemplate } from "./utils/pdfTemplateLoader";
+import { initSocket } from "./socket";
 
 const app = express();
+const server = createServer(app);
+
+initSocket(server);
+
+
 const port = PORT || 3000;
 
 app.use(cors());
@@ -48,49 +55,12 @@ app.get("/api/test", (req: IRequest, res) => {
   res.json({ message: "Hello World!" });
 });
 
-app.get("/generate-pdf", async (req, res) => {
-  try {
-    const item = await Item.findOne({
-      auctionEndTime: { $lte: new Date() },
-    });
-
-    const invoiceNumber = Math.floor(Math.random() * 1000000).toString();
-
-    const htmlContent = await loadPDFTemplate("invoiceTemplate", {
-      INVOICE_NUMBER: invoiceNumber,
-      INVOICE_DATE: new Date().toLocaleDateString(),
-      TOTAL_AMOUNT: item?.currentPrice.toString()!,
-      ITEM_NAME: item?.name!,
-      ITEM_AMOUNT: item?.currentPrice.toString()!,
-      TO_NAME: "Susan Khadka",
-    });
-
-    const { fileKey, presignedUrl } = await handlePDFGenerationAndUpload(
-      htmlContent,
-      `invoice-${invoiceNumber}.pdf`
-    );
-
-    res.json({
-      success: true,
-      message: "PDF generated successfully",
-      fileKey,
-      presignedUrl,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error generating PDF",
-      error: (error as Error).message,
-    });
-  }
-});
+cron.schedule("* * * * *", checkAuctionsStatus);
 
 // Error handling
 app.use("*", (_req: Request, res: Response): void => {
   res.status(404).send({ message: "Not found" });
 });
-
-cron.schedule("* * * * *", checkAuctionsStatus);
 
 app.use(
   (_err: Error, _req: Request, res: Response, _next: NextFunction): void => {
@@ -99,7 +69,7 @@ app.use(
   }
 );
 
-app.listen(port, async () => {
+server.listen(port, async () => {
   // Handle connection to database
   await dbConnection();
   return console.log(`Server running on port http://localhost:${port}`);

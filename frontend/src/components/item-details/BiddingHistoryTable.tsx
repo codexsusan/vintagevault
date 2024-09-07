@@ -11,6 +11,7 @@ import {
     TableRow
 } from "@/components/ui/table";
 import { useGetItemBids } from "@/hooks/itemHooks";
+import { useRealTimeBiddingHistoryTableUpdate } from "@/hooks/useRTBiddingHistoryTableUpdate";
 import { AlertCircle, Banknote, Bot, Calendar, Clock, User } from "lucide-react";
 
 interface Bid {
@@ -25,6 +26,8 @@ interface Bid {
 
 const BiddingHistoryTable = ({ id }: { id: string }) => {
     const { data, isLoading, isError } = useGetItemBids(id);
+
+    useRealTimeBiddingHistoryTableUpdate(id);
 
     if (isLoading) {
         return <BiddingHistorySkeleton />;
@@ -41,8 +44,6 @@ const BiddingHistoryTable = ({ id }: { id: string }) => {
             </Alert>
         );
     }
-
-    const bids: Bid[] = data.data;
 
     return (
         <Card>
@@ -75,7 +76,7 @@ const BiddingHistoryTable = ({ id }: { id: string }) => {
                                 <TableHead className="w-1/5">
                                     <div className="flex items-center space-x-2">
                                         <Bot className="h-4 w-4" />
-                                        <span>Bid Type</span>
+                                        <span> Bid Type</span>
                                     </div>
                                 </TableHead>
                                 <TableHead className="w-1/5 text-right">
@@ -87,14 +88,14 @@ const BiddingHistoryTable = ({ id }: { id: string }) => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {bids.length === 0 ? (
+                            {data.data.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                         No bids have been placed yet.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                bids.map((bid) => (
+                                    data.data.map((bid: Bid) => (
                                     <TableRow key={bid._id}>
                                         <TableCell className="font-medium">{bid.user.name}</TableCell>
                                         <TableCell>{new Date(bid.timestamp).toLocaleDateString()}</TableCell>

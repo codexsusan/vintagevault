@@ -1,12 +1,6 @@
-import { useGetItems } from "@/hooks/itemHooks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
-import { QueryParams } from "@/services/itemService";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import useDebounce from "@/hooks/useDebounce";
-import { Link } from "react-router-dom";
 import {
     Pagination,
     PaginationContent,
@@ -15,8 +9,14 @@ import {
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
-} from "@/components/ui/pagination"
+} from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useGetItems } from "@/hooks/itemHooks";
+import useDebounce from "@/hooks/useDebounce";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { QueryParams } from "@/services/itemService";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 function Home() {
     useDocumentTitle("Home");
@@ -94,6 +94,7 @@ function Home() {
                     </Card>
                 ))}
             </div>
+
 
             {data && totalPages > 1 && (
                 <Pagination className="mt-8">

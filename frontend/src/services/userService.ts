@@ -29,6 +29,12 @@ const GetUserBiddingHistoryResponseSchema = z.object({
       image: z.string(),
       awarded: z.boolean(),
       status: z.string(),
+      invoice: z
+        .object({
+          _id: z.string(),
+          url: z.string(),
+        })
+        .nullable(),
       bids: z.array(
         z.object({
           _id: z.string(),
@@ -46,6 +52,10 @@ export type GetUserBiddingHistoryResponse = z.infer<
 >;
 
 export type GetMeResponse = z.infer<typeof GetMeResponseSchema>;
+
+export type UserBiddingHistoryQueryParams = {
+  status: "all" | "in-progress" | "won" | "lost";
+};
 
 class UserService {
   async getMe(): Promise<GetMeResponse> {
@@ -77,10 +87,18 @@ class UserService {
     }
   }
 
-  async getUserBiddingHistory() {
+  async getUserBiddingHistory({
+    status,
+  }: UserBiddingHistoryQueryParams): Promise<GetUserBiddingHistoryResponse> {
     try {
-      const response = await apiService.get("user/bidding-history");
-      console.log(response);
+      const baseUrl = "user/bidding-history";
+      let finalUrl = baseUrl;
+      if (status !== "all") {
+        finalUrl = `${baseUrl}?status=${status}`;
+      }
+      const response = await apiService.get<GetUserBiddingHistoryResponse>(
+        finalUrl
+      );
       const validatedData = GetUserBiddingHistoryResponseSchema.parse(response);
       return validatedData;
     } catch (error) {

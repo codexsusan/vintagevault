@@ -6,6 +6,9 @@ import { IRequest } from "../types";
 import { processAutoBids } from "./autobid.controller";
 import AutoBidConfig from "../models/auto-bid.model";
 import { startSession } from "mongoose";
+import { getSocket } from "../socket";
+import { getUserById } from "../data/user";
+import { updateBidViaSocket } from "../socket/bid";
 
 export const placeBid = async (req: IRequest, res: Response) => {
   const session = await startSession();
@@ -72,6 +75,25 @@ export const placeBid = async (req: IRequest, res: Response) => {
         itemId: newBid.itemId,
         amount: newBid.amount,
         timestamp: newBid.timestamp,
+      },
+    });
+
+    const user = await getUserById(req.user?.userId!);
+
+    updateBidViaSocket({
+      itemId: item._id.toString(),
+      highestBidder: req.user?.userId!,
+      bidCount: item.bids.length,
+      currentPrice: item.currentPrice,
+      bid: {
+        _id: newBid._id,
+        user: {
+          _id: user?.id,
+          name: user?.name!,
+        },
+        timestamp: newBid.timestamp,
+        isAutoBid: newBid.isAutoBid,
+        amount: newBid.amount,
       },
     });
 

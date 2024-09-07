@@ -12,13 +12,16 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "../ui/dropdown-menu";
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Navbar() {
     const [prevScrollPos, setPrevScrollPos] = useState(0);
     const [isDelayedVisible, setIsDelayedVisible] = useState(true);
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const handleLogout = () => {
+        queryClient.clear();
         removeAuthToken();
         removeUserRole();
         navigate("/auth/login");

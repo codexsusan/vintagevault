@@ -77,6 +77,8 @@ export type QueryParams = {
   sortOrder?: "asc" | "desc";
 };
 
+
+
 export type GetItemsResponse = z.infer<typeof GetItemsResponseSchema>;
 
 export type GetItemDetailsResponse = z.infer<
@@ -86,6 +88,8 @@ export type GetItemDetailsResponse = z.infer<
 export type GetItemBiddingHistoryResponse = z.infer<
   typeof GetItemBiddingHistoryResponseSchema
 >;
+
+
 
 class ItemService {
   async createItem(data: Item): Promise<ApiResponse> {
@@ -172,9 +176,7 @@ class ItemService {
     }
   }
 
-  async getItemBiddingHistory(
-    id: string
-  ): Promise<GetItemBiddingHistoryResponse> {
+  async getItemBiddingHistory(id: string): Promise<GetItemBiddingHistoryResponse> {
     try {
       const response = await apiService.get<GetItemBiddingHistoryResponse>(
         `items/${id}/bidding-history`

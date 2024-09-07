@@ -69,7 +69,7 @@ const AuctionEnded = ({
                                     <p>View Invoice</p>
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                            <DialogContent className="max-w-4xl max-h-[100vh] overflow-y-auto">
                                 <DialogHeader>
                                     <DialogTitle>Invoice</DialogTitle>
                                 </DialogHeader>
@@ -84,6 +84,7 @@ const AuctionEnded = ({
                                 </div>
                             </DialogContent>
                         </Dialog>
+                        
                         <Button
                             variant="default"
                             className="flex gap-x-3"

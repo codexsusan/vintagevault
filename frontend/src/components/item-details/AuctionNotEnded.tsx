@@ -84,7 +84,6 @@ const AuctionNotEnded = ({
                 queryClient.invalidateQueries({
                     queryKey: ["getItemBids", id]
                 });
-                // bidForm.reset();
             },
             onError: (error: Error) => {
                 toast.error(error.message);
@@ -100,9 +99,21 @@ const AuctionNotEnded = ({
             return;
         }
 
-        await toggleAutoBid.mutateAsync(id!);
-        bidForm.setValue('isAutoBid', checked);
-        toast.success(checked ? "Auto-bid activated" : "Auto-bid deactivated");
+        await toggleAutoBid.mutateAsync(id!, {
+            onSuccess: () => {
+                toast.success(checked ? "Auto-bid activated" : "Auto-bid deactivated");
+                bidForm.setValue('isAutoBid', checked);
+            },
+            onError: (error: Error) => {
+                toast.error(error.message);
+            },
+        });
+    };
+
+    const onCountDownEnd = () => {
+        queryClient.invalidateQueries({
+            queryKey: ["getItemDetails", id]
+        });
     };
 
     const { isValid, isSubmitting } = bidForm.formState;
@@ -117,7 +128,11 @@ const AuctionNotEnded = ({
                 </div>
                 <div className=''>
                     <p>Time Left:</p>
-                    <CountDown className='text-gray-600 text-xl font-semibold' endTime={new Date(item.auctionEndTime)} />
+                    <CountDown
+                        className='text-gray-600 text-xl font-semibold'
+                        onComplete={onCountDownEnd}
+                        endTime={new Date(item.auctionEndTime)}
+                    />
                 </div>
             </div>
             <Form {...bidForm}>

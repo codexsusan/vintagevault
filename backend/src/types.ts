@@ -1,5 +1,6 @@
 import { Request } from "express";
 import { Readable } from "node:stream";
+import { Socket } from "socket.io";
 
 export interface User {
   id: string;
@@ -11,6 +12,14 @@ export interface User {
 }
 
 export interface IRequest extends Request {
+  user?: {
+    userId: string;
+    email: string;
+    role: "admin" | "user";
+  };
+}
+
+export interface ISocket extends Socket {
   user?: {
     userId: string;
     email: string;

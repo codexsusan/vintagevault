@@ -8,6 +8,7 @@ import * as z from 'zod';
 import toast from 'react-hot-toast';
 import { useConfigureAutoBid } from "@/hooks/autoBidHooks";
 import { GetAutoBidConfigResponse } from "@/services/autoBidService";
+import { useEffect } from "react";
 
 const autoBidFormSchema = z.object({
     maxBidAmount: z.number().min(0.01, "Maximum bid amount must be greater than 0"),
@@ -34,6 +35,13 @@ export function AutoBidDialog({ data, isOpen, onClose, itemId, children }: AutoB
             bidAlertPercentage: data?.bidAlertPercentage || 0,
         },
     });
+
+    useEffect(() => {
+        if (data) {
+            form.setValue('maxBidAmount', data.maxBidAmount);
+            form.setValue('bidAlertPercentage', data.bidAlertPercentage);
+        }
+    }, [data]);
 
     function onSubmit(data: AutoBidFormValues, event: React.FormEvent) {
         event.preventDefault();
