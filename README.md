@@ -47,10 +47,12 @@ Before you begin, ensure you have the following installed:
 
 2. For the purpose of testing notifications, I want you to register yourself as a user in the application with valid email id.
 
-3. As of right now, you can register yourself as a user simply by going to the register page but to register as an admin, you must go to `http://localhost:5173/auth/admin/register` path as I don't want to expose the admin registration page. As for logging in, you can use the same page for user and admin. Below I have shared an admin credentials that you can use to login. 
+3. As of right now, you can register yourself as a user simply by going to the register page but to register as an admin, you must go to `http://localhost:5173/auth/admin/register` path as I don't want to expose the admin registration page. As for logging in, you can use the same page for user and admin.
+
+Below I have shared an admin credentials that you can use to login. 
 
 ```bash
-    username: achyut@gmail.com
+    email: achyut@gmail.com
     password: 12345678
 ```
 
