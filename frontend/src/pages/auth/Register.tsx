@@ -17,7 +17,8 @@ const formSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
     password: z
         .string()
-        .min(3, { message: "Password must be atleast 3 characters." })
+        .min(3, { message: "Password must be atleast 3 characters." }),
+    userType: z.string().min(3).default("user"),
 });
 
 
@@ -32,12 +33,13 @@ const Register = () => {
             name: "",
             email: "",
             password: "",
+            userType: "user",
         },
     });
 
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        console.log(values);
+       
         registerMutation(values, {
             onSuccess: (data: ApiResponse) => {
                 if(data.success) {

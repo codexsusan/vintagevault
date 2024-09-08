@@ -8,7 +8,6 @@ import { LoginUserSchema, RegisterUserSchema } from "../schemas/user.schema";
 import { IRequest } from "../types";
 
 export const registerUser = async (req: Request, res: Response) => {
-  // const { name, email, password } = req.body;
   const validation = RegisterUserSchema.safeParse(req.body);
 
   if(!validation.success){
@@ -18,7 +17,7 @@ export const registerUser = async (req: Request, res: Response) => {
     });
   }
 
-  const { name, email, password } = validation.data;
+  const { name, email, password, userType } = validation.data;
 
   try {
     const fetchedUser = await getUserByEmail(email);
@@ -33,19 +32,17 @@ export const registerUser = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(SALT_ROUNDS);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create a new user instance
-    const newUser = await User.create({
+    await User.create({
       email,
       profilePicture: "",
       name,
-      userType: "user",
+      userType,
       password: hashedPassword,
     });
 
     res.status(201).json({
       message: "User registered successfully.",
       success: true,
-      // token,
     });
   } catch (error) {
     console.log(error);
@@ -65,7 +62,6 @@ export const loginUser = async (req: Request, res: Response) => {
 
   const { email, password } = validation.data;
   try {
-    // Check if the user exists
     const user = await getUserByEmail(email);
 
     if (!user) {
@@ -74,7 +70,6 @@ export const loginUser = async (req: Request, res: Response) => {
         .json({ message: "Invalid Credentials", success: false });
     }
 
-    // Compare the passwords
     const isMatch: boolean = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res
@@ -105,24 +100,4 @@ export const loginUser = async (req: Request, res: Response) => {
 };
 
 
-export const login = (req: IRequest, res: Response, next: NextFunction) => {
-  const { username, password } = req.body;
-  const user = hardcodedUsers.find(
-    (user) => user.username === username && user.password === password
-  );
 
-  if (user) {
-    const token = jwt.sign(
-      { username: user.username, role: user.role, id: user.id },
-      JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-    res.json({ token, role: user.role });
-  } else {
-    res.status(401).json({ message: "Invalid credentials" });
-  }
-};
-
-// export function getUserById(userId: string): User | undefined {
-//   return hardcodedUsers.find((user) => user.id === userId);
-// }

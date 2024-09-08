@@ -17,6 +17,14 @@ export const setAutoBidConfig = async (req: IRequest, res: Response) => {
     const userId = req.user!.userId;
 
     let config = await AutoBidConfig.findOne({ userId });
+
+    if (config?.status === "paused") {
+      return res.status(400).json({
+        success: false,
+        message: "Auto-bid is currently deactivated.",
+      });
+    }
+
     if (config) {
       config.maxBidAmount = validatedConfig.maxBidAmount;
       config.bidAlertPercentage = validatedConfig.bidAlertPercentage;
@@ -60,6 +68,14 @@ export const getAutoBidConfig = async (req: IRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const config = await AutoBidConfig.findOne({ userId });
+
+    // if (config?.status === "paused") {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Auto-bid is currently deactivated.",
+    //   });
+    // }
+
     if (!config) {
       return res
         .status(400)
@@ -88,12 +104,46 @@ export const getAutoBidConfig = async (req: IRequest, res: Response) => {
   }
 };
 
+export const toggleAutoBidStatus = async (req: IRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const config = await AutoBidConfig.findOne({ userId });
+
+    if (!config) {
+      return res
+        .status(404)
+        .json({ message: "Auto-bid configuration not found" });
+    }
+
+    config.status = config.status === "paused" ? "active" : "paused";
+
+    await config.save();
+    res.json({
+      success: true,
+      message: "Auto-bid status updated successfully.",
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Error toggling auto-bid status",
+      error: (error as Error).message,
+    });
+  }
+};
+
 export const toggleAutoBid = async (req: IRequest, res: Response) => {
   try {
     const { itemId } = req.params;
     const userId = req.user!.userId;
     const config = await AutoBidConfig.findOne({ userId });
     const item = await Item.findById(itemId);
+
+    if (config?.status === "paused") {
+      return res.status(400).json({
+        success: false,
+        message: "Auto-bid is currently deactivated.",
+      });
+    }
 
     if (!config) {
       return res

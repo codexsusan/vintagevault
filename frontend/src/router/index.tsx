@@ -3,6 +3,7 @@ import UserLayout from "@/layout/UserLayout";
 import AddItem from "@/pages/admin/AddItem";
 import Dashboard from "@/pages/admin/Dashboard";
 import UpdateItem from "@/pages/admin/UpdateItem";
+import RegisterAdmin from "@/pages/auth/AdminRegister";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import NotFound from "@/pages/NotFound";
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
     {
         path: "/auth/register",
         element: <Register />,
+    },
+    {
+        path: "/auth/admin/register",
+        element: <RegisterAdmin />,
     },
     {
         path: "/",

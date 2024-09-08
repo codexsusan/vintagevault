@@ -27,3 +27,12 @@ export const useToggleAutoBid = () => {
     },
   });
 };
+
+export const useToggleActivateAutoBid = () => {
+  return useMutation({
+    mutationKey: ["toggleActivateAutoBid"],
+    mutationFn: async () => {
+      return await autoBidService.toggleActivateAutoBid();
+    },
+  });
+};

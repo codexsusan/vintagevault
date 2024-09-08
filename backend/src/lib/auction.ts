@@ -122,15 +122,3 @@ export async function checkAuctionsStatus() {
     }
   });
 }
-
-// Function to release all funds for all bidders except the winner
-const releaseAllAutoBidFunds = async (winnerId: string, itemId: string) => {
-  const autoBidConfigs = await AutoBidConfig.find({
-    "activeBids.itemId": itemId,
-    userId: { $ne: winnerId },
-    status: "active",
-  }).sort({ createdAt: 1 });
-
-  for (const config of autoBidConfigs) {
-  }
-};

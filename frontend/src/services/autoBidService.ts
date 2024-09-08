@@ -87,6 +87,21 @@ class AutoBidService {
       throw error;
     }
   }
+
+  async toggleActivateAutoBid(): Promise<ApiResponse> {
+    try {
+      const response = await apiService.put<ApiResponse>(
+        "auto-bid/toggle-activate"
+      );
+      const validatedData = ApiResponseSchema.parse(response);
+      return validatedData;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data.message);
+      }
+      throw error;
+    }
+  }
 }
 
 export const autoBidService = new AutoBidService();

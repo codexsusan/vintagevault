@@ -44,41 +44,15 @@ Before you begin, ensure you have the following installed:
 ## Configuration
 
 1. Create a `.env` file in the `backend` directory and paste the secrets that is shared with you in the task submission email.
-2. For testing notifying users, you can change the user email in `backend/src/constants.ts` file. You can keep your email and login in through the same account.
 
-    For example: 
-    ```ts
-            export const hardcodedUsers: User[] = [
-            // .. keep the existing users
-                {
-                    id: "5432167890",
-                    name: "Susan",
-                    email: "your-email@gmail.com",
-                    username: "user1",
-                    password: "user1",
-                    role: "user",
-                },
-            // ... keep the existing users
-            ];
-    ```
-3. Here are few login credentials for testing purpose:
+2. For the purpose of testing notifications, I want you to register yourself as a user in the application with valid email id.
 
-    For user1:
-    - Username: `user1`
-    - Password: `user1`
+3. As of right now, you can register yourself as a user simply by going to the register page but to register as an admin, you must go to `http://localhost:5173/auth/admin/register` path as I don't want to expose the admin registration page. As for logging in, you can use the same page for user and admin. Below I have shared an admin credentials that you can use to login. 
 
-    For user2:
-    - Username: `user2`
-    - Password: `user2`
-
-    For admin1:
-    - Username: `admin1`
-    - Password: `admin1`
-
-    For admin2:
-    - Username: `admin2`
-    - Password: `admin2`
-
+```bash
+    username: achyut@gmail.com
+    password: 12345678
+```
 
 ## Running the Application
 
@@ -106,3 +80,8 @@ Before you begin, ensure you have the following installed:
  - Auto-bidding feature
  - Administrator dashboard for item management (CRUD operations)
  - Responsive design using Tailwind CSS and shadcn UI
+ - Item award upon action finish
+ - Item bill creation
+ - E-mail notifications for item award and item bidding
+ - Real-time updates of the latest bid in the Item details
+ - Deactivation of the Auto-bidding (in profile page)
