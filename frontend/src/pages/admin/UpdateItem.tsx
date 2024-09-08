@@ -112,7 +112,7 @@ function UpdateItem() {
           toast.error("Image upload failed: " + error.message);
         },
       });
-    } catch (error) {
+    } catch {
       toast.error("Image upload failed");
     }
   };

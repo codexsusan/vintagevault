@@ -34,11 +34,15 @@ export default function ActionCell({ row, table }: {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <Link to={`/admin/item/update/${data._id}`}>
-                    <DropdownMenuItem className="hover:cursor-pointer" >
-                        Edit
-                    </DropdownMenuItem>
-                </Link>
+                {
+                    new Date(data.auctionEndTime) > new Date()
+                        ? <Link to={`/admin/item/update/${data._id}`}>
+                            <DropdownMenuItem className="hover:cursor-pointer" >
+                                Edit
+                            </DropdownMenuItem>
+                        </Link> :
+                        null
+                }
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     className="hover:cursor-pointer"

@@ -192,15 +192,32 @@ export const updateItem = async (req: IRequest, res: Response) => {
   try {
     const validatedItem = ItemSchema.parse(req.body);
 
+    const item = await Item.findById(req.params.id);
+
     const itemData = {
       ...validatedItem,
-      // currentPrice: validatedItem.startingPrice,
       auctionEndTime: new Date(validatedItem.auctionEndTime),
     };
-    const updatedItem = await Item.findByIdAndUpdate(req.params.id, itemData, {
-      new: true,
-      runValidators: true,
-    }).select("-__v");
+
+    const { auctionEndTime, ...updateableItemData } = itemData;
+
+    let finalItemData = {
+      ...updateableItemData,
+    };
+
+    if (!item?.awarded) {
+      // finalItemData.auctionEndTime = new Date(auctionEndTime);
+      finalItemData = itemData;
+    }
+
+    const updatedItem = await Item.findByIdAndUpdate(
+      req.params.id,
+      finalItemData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-__v");
     if (!updatedItem) {
       return res.status(404).json({ message: "Item not found" });
     }

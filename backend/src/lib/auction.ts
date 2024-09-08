@@ -95,28 +95,24 @@ export async function checkAuctionsStatus() {
       }
     }
 
-    // Notify all manual bidders who didn't win, excluding those already notified
-    const nonWinningBidders = await Bid.distinct("userId", {
+    const bidders = await Bid.distinct("userId", {
       itemId: item._id,
       isAutoBid: false,
-      userId: { $ne: highestBidder!.userId },
     });
 
+    const finalNonWinningBidders = bidders.filter(
+      (bidderId) => bidderId !== highestBidder!.userId
+    );
 
-    for (const bidderId of nonWinningBidders) {
+    for (const bidderId of finalNonWinningBidders) {
       if (!notifiedUsers.has(bidderId)) {
         const bidder = await getUserById(bidderId);
         if (bidder) {
-          await sendMail(
-            bidder.email,
-            "Auction Ended",
-            "auctionEnded",
-            {
-              USERNAME: bidder.name,
-              ITEM_NAME: item.name,
-              COMPANY_NAME: "Vintage Vault",
-            }
-          );
+          await sendMail(bidder.email, "Auction Ended", "auctionEnded", {
+            USERNAME: bidder.name,
+            ITEM_NAME: item.name,
+            COMPANY_NAME: "Vintage Vault",
+          });
         }
       }
     }

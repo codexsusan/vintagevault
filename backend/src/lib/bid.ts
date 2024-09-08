@@ -9,7 +9,6 @@ export async function getAllBiddersForItem(
   const manualBidders = await Bid.distinct("userId", {
     itemId: itemId,
     isAutoBid: false,
-    userId: { $ne: currentUserId },
   });
 
   // Fetch all auto-bid configurations for the item
@@ -23,5 +22,5 @@ export async function getAllBiddersForItem(
   // Combine and deduplicate
   const allBidders = new Set([...manualBidders, ...autoBidders]);
 
-  return Array.from(allBidders);
+  return Array.from(allBidders).filter((userId) => userId !== currentUserId);
 }
