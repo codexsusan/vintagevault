@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto-Bidding Maximum Reached</title>
+    <title>Auction Update</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,7 +18,7 @@
             padding: 20px;
         }
         .header {
-            background-color: #e74c3c;
+            background-color: #007bff;
             color: #ffffff;
             padding: 20px;
             text-align: center;
@@ -44,20 +44,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Auto-Bidding Maximum Reached</h1>
+            <h1>Auction Update</h1>
         </div>
         <div class="content">
             <p>Dear ::USERNAME::,</p>
-            <p>We wanted to inform you that your auto-bidding has reached its maximum allocated amount:</p>
-            <p><strong>You have used 100% of your maximum bid amount of $::MAX_AMOUNT::.</strong></p>
-            <p>The current status of the auction item is: <strong>::STATUS::</strong>.</p>
-            <p>As a result, your auto-bidding has been paused. To continue participating in auctions, you may want to consider the following actions:</p>
-            <ul>
-                <li>Increase your maximum bid amount</li>
-                <li>Review your current auto-bids</li>
-                <li>Manually place bids on items you're most interested in</li>
-            </ul>
-            <p>Thank you for your active participation!</p>
+            <p>We wanted to inform you that a new bid has been placed on the item <strong>::ITEM_NAME::</strong>.</p>
+            <p>The current highest bid is now <strong>$::CURRENT_PRICE::</strong>.</p>
+            <p>Thank you for participating in the auction. Stay tuned for more updates!</p>
             <p>Best regards,<br>The ::COMPANY_NAME:: Team</p>
         </div>
         <div class="footer">

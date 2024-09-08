@@ -11,7 +11,6 @@ import { AlertCircle } from "lucide-react";
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-
 function ItemDetails() {
     useDocumentTitle("Item Details");
     const confetti = useConfetti();
@@ -22,7 +21,6 @@ function ItemDetails() {
     useRealtimeItemUpdates(id!);
 
     useEffect(() => {
-        // TODO: Might implement (P5)
         if (itemData?.item?.awarded && itemData?.item?.user?.isWinner) {
             confetti.onOpen();
         }

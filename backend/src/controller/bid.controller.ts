@@ -9,6 +9,8 @@ import { startSession } from "mongoose";
 import { getSocket } from "../socket";
 import { getUserById } from "../data/user";
 import { updateBidViaSocket } from "../socket/bid";
+import { sendMail } from "../mail";
+import { getAllBiddersForItem } from "../lib/bid";
 
 export const placeBid = async (req: IRequest, res: Response) => {
   const session = await startSession();
@@ -52,6 +54,7 @@ export const placeBid = async (req: IRequest, res: Response) => {
         .status(400)
         .json({ message: "You already have the highest bid", success: false });
     }
+
 
     const newBid = new Bid({
       ...validatedBid,
@@ -97,7 +100,22 @@ export const placeBid = async (req: IRequest, res: Response) => {
       },
     });
 
-    // TODO: Notification to all those who have bidded in the item before
+    const userIds = await getAllBiddersForItem(
+      item._id.toString(),
+      req.user?.userId!
+    );
+
+    for (const userId of userIds) {
+      const user = await getUserById(userId);
+      if (user) {
+        await sendMail(user.email, "New Bid", "newBidNotice", {
+          USERNAME: user.name,
+          ITEM_NAME: item.name,
+          CURRENT_PRICE: validatedBid.amount.toString(),
+          COMPANY_NAME: "Vintage Vault",
+        });
+      }
+    }
 
     // Trigger auto-bidding for other users
     await processAutoBids(

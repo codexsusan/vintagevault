@@ -27,7 +27,6 @@ const InvoiceColumn = ({ info }: { info: CellContext<Item, Invoice | null> }) =>
                         title="Preview Invoice"
                         onClick={(e) => {
                             e.stopPropagation();
-                            // TODO: Add preview logic here
                         }}
                     >
                         <Eye className="h-4 w-4" />

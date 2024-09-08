@@ -281,23 +281,3 @@ export const searchItems = async (req: IRequest, res: Response) => {
     });
   }
 };
-
-// export const endAuction = async (itemId: string) => {
-//   const item = await Item.findById(itemId);
-//   if (!item) return;
-
-//   const bids = await Bid.find({ itemId }).sort({ amount: -1 });
-//   const winningBid = bids[0];
-
-//   // Release funds for all bidders except the winner
-//   for (const bid of bids.slice(1)) {
-//     await releaseAutoBidFunds(bid.userId, itemId, bid.amount);
-//   }
-
-//   // TODO: Update item status
-//   // item.status = "closed";
-//   // item.winnerId = winningBid.userId;
-//   await item.save();
-
-//   // TODO: Notify winner and other bidders
-// };

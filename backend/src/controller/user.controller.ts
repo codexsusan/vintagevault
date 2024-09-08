@@ -11,8 +11,6 @@ export const updateProfilePicture = async (req: IRequest, res: Response) => {
   const { profilePicture } = req.body;
   const userId = req.user!.userId;
   try {
-    // TODO: Update user profile picture
-
     await User.updateOne({ _id: userId }, { profilePicture });
     res.json({
       success: true,

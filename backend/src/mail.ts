@@ -14,7 +14,7 @@ export const sendMail = async (
   const html = await loadEmailTemplate(templateName, templateData);
   // Used resend to send email
   return await resend.emails.send({
-    from: FROM_ADDRESS!,
+    from: `Vintage Vault <${FROM_ADDRESS!}>`,
     to,
     subject,
     html: html,

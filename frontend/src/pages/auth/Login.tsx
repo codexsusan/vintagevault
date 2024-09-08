@@ -48,7 +48,6 @@ function Login() {
         });
     };
 
-    // TODO: Can implement referrer for proper alert
     return (
         <div className="min-h-screen font-inter flex items-center justify-center bg-gray-50">
             <div className="bg-white p-8 rounded-lg shadow-md w-96">

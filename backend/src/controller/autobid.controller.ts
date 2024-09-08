@@ -196,7 +196,7 @@ export const processAutoBids = async (
             await item.save({ session });
 
             const user = await getUserById(config.userId);
-            
+
             updateBidViaSocket({
               itemId: item._id.toString(),
               highestBidder: excludeUserId!,
@@ -221,6 +221,8 @@ export const processAutoBids = async (
               await config.save({ session });
               const user = await getUserById(config.userId);
 
+              const bidStatus = "in-progress";
+
               await sendMail(
                 user!.email,
                 "Auto-Bidding Maximum Reached",
@@ -229,11 +231,8 @@ export const processAutoBids = async (
                   USERNAME: user?.name!,
                   COMPANY_NAME: "Vintage Vault",
                   MAX_AMOUNT: config.maxBidAmount.toString(),
+                  STATUS: bidStatus,
                 }
-              );
-              // TODO: Notification when the total amount was bid + state of the item (i.e won, lose, in-progress)
-              console.log(
-                `Auto-bidding stopped for user ${user?.email} due to insufficient funds`
               );
             }
 
@@ -257,8 +256,8 @@ export const processAutoBids = async (
                 `Alert: User ${config.userId} has reached ${config.bidAlertPercentage}% of their maximum bid amount`
               );
               config.alertSent = true;
-              await config.save({ session });
             }
+            await config.save({ session });
 
             break;
           }

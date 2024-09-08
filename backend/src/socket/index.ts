@@ -10,7 +10,7 @@ let io: Server | null = null;
 export const initSocket = (server: HTTPServer) => {
   io = new Server(server, {
     cors: {
-      origin: "*", // TODO: Configure CORS as needed
+      origin: "*",
       methods: ["GET", "POST"],
     },
   });

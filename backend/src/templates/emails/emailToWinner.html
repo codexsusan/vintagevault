@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto-Bidding Maximum Reached</title>
+    <title>Bid Won Notification</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,7 +18,7 @@
             padding: 20px;
         }
         .header {
-            background-color: #e74c3c;
+            background-color: #4a90e2;
             color: #ffffff;
             padding: 20px;
             text-align: center;
@@ -44,20 +44,15 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Auto-Bidding Maximum Reached</h1>
+            <h1>Congratulations, You Won the Bid!</h1>
         </div>
         <div class="content">
             <p>Dear ::USERNAME::,</p>
-            <p>We wanted to inform you that your auto-bidding has reached its maximum allocated amount:</p>
-            <p><strong>You have used 100% of your maximum bid amount of $::MAX_AMOUNT::.</strong></p>
-            <p>The current status of the auction item is: <strong>::STATUS::</strong>.</p>
-            <p>As a result, your auto-bidding has been paused. To continue participating in auctions, you may want to consider the following actions:</p>
-            <ul>
-                <li>Increase your maximum bid amount</li>
-                <li>Review your current auto-bids</li>
-                <li>Manually place bids on items you're most interested in</li>
-            </ul>
-            <p>Thank you for your active participation!</p>
+            <p>We are excited to inform you that you have won the auction for the following item:</p>
+            <p><strong>::ITEM_NAME::</strong></p>
+            <p>You can review the details of your winning bid and complete the payment in your account.</p>
+            
+            <p>Thank you for participating in the auction, and congratulations once again on your win!</p>
             <p>Best regards,<br>The ::COMPANY_NAME:: Team</p>
         </div>
         <div class="footer">

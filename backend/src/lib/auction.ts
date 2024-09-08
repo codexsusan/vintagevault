@@ -1,4 +1,5 @@
 import { getUserById } from "../data/user";
+import { sendMail } from "../mail";
 import AutoBidConfig from "../models/auto-bid.model";
 import Bid from "../models/bid.model";
 import Invoice from "../models/invoice.model";
@@ -39,18 +40,26 @@ export async function checkAuctionsStatus() {
       TO_NAME: user!.name,
     });
 
-    // TODO: Generate PDF for the winner
-
     const { fileKey, presignedUrl } = await handlePDFGenerationAndUpload(
       htmlContent,
       `invoice-${invoice._id}.pdf`
     );
 
-    console.log({ fileKey, presignedUrl });
-
     await Invoice.updateOne({ _id: invoice._id }, { invoiceKey: fileKey });
 
-    // TODO: Release funds for all bidders except the winner
+    await sendMail(
+      user?.email!,
+      "Congratulations, You Won the Bid!",
+      "emailToWinner",
+      {
+        USERNAME: user?.name!,
+        ITEM_NAME: item.name,
+        COMPANY_NAME: "Vintage Vault",
+      }
+    );
+
+    // Track users who have already been notified via auto-bid
+    const notifiedUsers = new Set<string>();
 
     const autoBidConfigs = await AutoBidConfig.find({
       "activeBids.itemId": item._id,
@@ -68,34 +77,50 @@ export async function checkAuctionsStatus() {
         );
         await config.save();
 
-        // TODO: Notify user about the released funds as auction has ended
-        console.log(`Auto-bidding released funds for user ${config.userId}`);
         const autoBidUser = await getUserById(config.userId);
-        // await sendMail(
-        //   autoBidUser!.email,
-        //   "Auto-Bid Funds Released",
-        //   "autoBidFundsReleased",
-        //   {
-        //     USERNAME: autoBidUser?.name!,
-        //     COMPANY_NAME: "Vintage Vault",
-        //     ITEM_NAME: item.name,
-        //     RELEASED_AMOUNT: itemBid.allocatedAmount.toString(),
-        //   }
-        // );
+
+        await sendMail(
+          autoBidUser!.email,
+          "Auction Ended - Funds Released",
+          "fundReleased",
+          {
+            USERNAME: autoBidUser?.name!,
+            ITEM_NAME: item.name,
+            COMPANY_NAME: "Vintage Vault",
+          }
+        );
+
+        // Add the user to the notified set
+        notifiedUsers.add(config.userId);
       }
     }
 
-    sendEmailToWinner(highestBidder!.userId, item._id);
-    console.log(`Auction ${item._id} has ended and awarded`);
-    // TODO: Notify winner and other bidders
-    // TODO: End auction
-    // TODO: Use socket to notify all bidders viewing the items details page
-  });
-}
+    // Notify all manual bidders who didn't win, excluding those already notified
+    const nonWinningBidders = await Bid.distinct("userId", {
+      itemId: item._id,
+      isAutoBid: false,
+      userId: { $ne: highestBidder!.userId },
+    });
 
-function sendEmailToWinner(userId: string, auction: string) {
-  // TODO: Trigger email to winner
-  console.log(`Email sent to user ${userId} for winning auction ${auction}`);
+
+    for (const bidderId of nonWinningBidders) {
+      if (!notifiedUsers.has(bidderId)) {
+        const bidder = await getUserById(bidderId);
+        if (bidder) {
+          await sendMail(
+            bidder.email,
+            "Auction Ended",
+            "auctionEnded",
+            {
+              USERNAME: bidder.name,
+              ITEM_NAME: item.name,
+              COMPANY_NAME: "Vintage Vault",
+            }
+          );
+        }
+      }
+    }
+  });
 }
 
 // Function to release all funds for all bidders except the winner
